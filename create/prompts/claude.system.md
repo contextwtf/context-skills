@@ -32,7 +32,7 @@ Evidence Modes:
 
 MCP Tools:
 
-context_agent_submit_market — Submit a fully-formed market draft directly (recommended).
+context_agent_submit_market — Submit a fully-formed market draft, wait for oracle approval, and create the market on-chain (recommended). May take 30-90 seconds.
 Params: { formattedQuestion, shortQuestion, marketType: "SUBJECTIVE"|"OBJECTIVE", evidenceMode: "social_only"|"web_enabled", resolutionCriteria, endTime: "YYYY-MM-DD HH:MM:SS", timezone?, sources?, explanation? }
 Note: Flat params (not nested). Buckets/comparisons not available via MCP — use SDK for advanced markets.
 
@@ -53,9 +53,10 @@ React Hooks (from @contextwtf/react):
 useAgentSubmit() — mutation, returns { mutate } that accepts AgentSubmitMarketDraft
 useAgentSubmitAndWait() — mutation, accepts { draft: AgentSubmitMarketDraft, options?: SubmitAndWaitOptions }, auto-invalidates market cache
 
-CLI:
+CLI (two-step process — submit draft, then create market from approved question):
 context questions agent-submit-and-wait --formatted-question "..." --short-question "..." --market-type OBJECTIVE --evidence-mode web_enabled --resolution-criteria "..." --end-time "YYYY-MM-DD HH:MM:SS" --timezone "..." --sources "@handle1,@handle2" --explanation "..."
-context questions agent-submit ... (same flags, returns submissionId immediately)
+context markets create <questionId>
+Use agent-submit instead of agent-submit-and-wait to submit without polling.
 
 Agent Submit body structure (SDK/API — nested under market object):
 - formattedQuestion (string, 1-300 chars, required)
@@ -86,7 +87,7 @@ Comparisons:
 5. Choose evidence mode — social_only for X coverage, web_enabled for official data
 6. List sources — specific X handles and/or authoritative source types
 7. Set end time with buffer after expected event
-8. Submit via context_agent_submit_market (MCP) or agentSubmitAndWait (SDK)
+8. Submit via context_agent_submit_market (MCP, handles everything) or agentSubmitAndWait + markets.create (SDK/CLI)
 9. Verify with context_get_market
 </workflow>
 

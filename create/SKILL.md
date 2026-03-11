@@ -216,7 +216,7 @@ Like "before" but across multiple buckets — finds which had the earliest event
 
 ### 1. MCP Tools (recommended for agents)
 
-**`context_agent_submit_market`** — Submit a fully-formed market draft directly. You control every field: question text, resolution criteria, sources, evidence mode, and end time. Returns a `submissionId` for tracking.
+**`context_agent_submit_market`** — Submit a fully-formed market draft, wait for oracle approval, and create the market on-chain. You control every field: question text, resolution criteria, sources, evidence mode, and end time. This may take 30-90 seconds.
 
 ```
 context_agent_submit_market({
@@ -242,14 +242,14 @@ context_create_market({ question: "Will Bitcoin hit $150,000 before April 2026?"
 
 ### 2. SDK (full control, supports buckets/comparisons)
 
-Use `ctx.questions.agentSubmit()` for fire-and-forget, or `ctx.questions.agentSubmitAndWait()` to poll until the submission is processed.
+Agent submit is a two-step process: first submit your draft and wait for oracle approval, then create the on-chain market from the approved question.
 
 ```typescript
 import { ContextClient } from '@contextwtf/sdk'
 
 const ctx = new ContextClient({ apiKey: process.env.CONTEXT_API_KEY })
 
-// Option A: Submit and poll until complete
+// Step 1: Submit draft and wait for oracle approval
 const submission = await ctx.questions.agentSubmitAndWait({
   market: {
     formattedQuestion: "Will Apple announce a foldable iPhone at WWDC 2026?",
@@ -273,17 +273,19 @@ Clarifications:
   }
 })
 
-// Option B: Submit and poll manually
-const { submissionId } = await ctx.questions.agentSubmit({ market: { ... } })
-// Check status later:
-const status = await ctx.questions.getSubmission(submissionId)
+// Step 2: Create the on-chain market from the approved question
+const questionId = submission.questions[0].id
+const market = await ctx.markets.create(questionId)
 ```
 
 The SDK's `AgentSubmitMarketDraft` type provides full TypeScript support including `buckets` and `comparisons` fields.
 
 ### 3. CLI
 
+Agent submit via CLI is also a two-step process:
+
 ```bash
+# Step 1: Submit draft and wait for oracle approval
 context questions agent-submit-and-wait \
   --formatted-question "Will Apple announce a foldable iPhone at WWDC 2026?" \
   --short-question "Foldable iPhone at WWDC 2026?" \
@@ -294,6 +296,9 @@ context questions agent-submit-and-wait \
   --timezone "America/Los_Angeles" \
   --sources "@Apple,@tim_cook" \
   --explanation "WWDC 2026 foldable iPhone prediction"
+
+# Step 2: Create the on-chain market from the approved question ID
+context markets create <questionId>
 ```
 
 Use `agent-submit` instead of `agent-submit-and-wait` if you want to submit without polling.
@@ -360,7 +365,7 @@ Turn a news headline into a well-structured market.
 5. Choose evidence mode — `social_only` if X accounts cover it, `web_enabled` for official data
 6. List sources — specific X handles and/or authoritative source types
 7. Set end time — give enough buffer after the expected event for evidence to appear
-8. Submit via `agentSubmit` for full control, or `context_create_market` for simple cases
+8. Submit via `context_agent_submit_market` (MCP, handles everything) or `agentSubmitAndWait` + `markets.create` (SDK/CLI). Use `context_create_market` for simple cases where you trust oracle-generated criteria.
 9. Verify the market was created with `context_get_market`
 
 ### Batch Market Creation
