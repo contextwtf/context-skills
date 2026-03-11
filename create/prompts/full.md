@@ -77,7 +77,7 @@ Clarifications:
 
 ### 1. MCP Tools (recommended for agents)
 
-**`context_agent_submit_market`** — Submit a fully-formed market draft directly (recommended). Returns a `submissionId`.
+**`context_agent_submit_market`** — Submit a fully-formed market draft, wait for oracle approval, and create the market on-chain (recommended). May take 30-90 seconds.
 
 ```
 context_agent_submit_market({
@@ -103,13 +103,15 @@ context_create_market({ question: "Will Bitcoin hit $150,000 before April 2026?"
 
 ### 2. SDK (full control, supports buckets/comparisons)
 
+Agent submit via SDK is a two-step process: submit draft and wait for oracle approval, then create the on-chain market.
+
 ```typescript
 import { ContextClient } from '@contextwtf/sdk'
 import type { AgentSubmitMarketDraft } from '@contextwtf/sdk'
 
 const ctx = new ContextClient({ apiKey: process.env.CONTEXT_API_KEY })
 
-// Submit and wait for processing (recommended)
+// Step 1: Submit and wait for oracle approval
 const submission = await ctx.questions.agentSubmitAndWait({
   market: {
     formattedQuestion: "Will Apple announce a foldable iPhone at WWDC 2026?",
@@ -124,9 +126,9 @@ const submission = await ctx.questions.agentSubmitAndWait({
   }
 })
 
-// Or submit without waiting (returns submissionId)
-const { submissionId } = await ctx.questions.agentSubmit({ market: { ... } })
-const status = await ctx.questions.getSubmission(submissionId)
+// Step 2: Create the on-chain market from the approved question
+const questionId = submission.questions[0].id
+const market = await ctx.markets.create(questionId)
 ```
 
 ### 3. React Hooks
@@ -148,7 +150,10 @@ submitAndWait({
 
 ### 4. CLI
 
+Agent submit via CLI is a two-step process:
+
 ```bash
+# Step 1: Submit draft and wait for oracle approval
 context questions agent-submit-and-wait \
   --formatted-question "Will Apple announce a foldable iPhone at WWDC 2026?" \
   --short-question "Foldable iPhone at WWDC 2026?" \
@@ -158,6 +163,9 @@ context questions agent-submit-and-wait \
   --end-time "2026-06-15 23:59:59" \
   --timezone "America/Los_Angeles" \
   --sources "@Apple,@tim_cook"
+
+# Step 2: Create the on-chain market from the approved question ID
+context markets create <questionId>
 ```
 
 Use `agent-submit` instead of `agent-submit-and-wait` to submit without polling.
@@ -233,7 +241,7 @@ Define relationships between buckets.
 5. Choose evidence mode
 6. List sources
 7. Set end time with buffer
-8. Submit via `context_agent_submit_market` (MCP) or `agentSubmitAndWait` (SDK)
+8. Submit via `context_agent_submit_market` (MCP, handles everything) or `agentSubmitAndWait` + `markets.create` (SDK/CLI)
 9. Verify with `context_get_market`
 
 ### Batch Creation
