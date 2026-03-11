@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SKILLS=("trade" "research" "build")
+SKILLS=("trade" "research" "build" "create")
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # If specific skill requested, only install that one
@@ -33,8 +33,8 @@ echo ""
 echo "  claude mcp add context-markets -- npx @contextwtf/mcp"
 echo ""
 
-if [[ " ${SKILLS[*]} " =~ " trade " ]]; then
-  echo "Trade skill requires environment variables:"
+if [[ " ${SKILLS[*]} " =~ " trade " ]] || [[ " ${SKILLS[*]} " =~ " create " ]]; then
+  echo "Trade and Create skills require environment variables:"
   echo "  export CONTEXT_API_KEY=\"your-api-key\""
   echo "  export CONTEXT_PRIVATE_KEY=\"0x...\""
   echo ""
