@@ -29,7 +29,7 @@ Skills provide structured workflows and domain knowledge on top of the [Context 
 claude plugin add contextwtf/context-plugin
 ```
 
-Skills are available as `/context:trade`, `/context:research`, `/context:build`.
+Skills are available as `/context:trade`, `/context:research`, `/context:build`, `/context:create`.
 
 ### Claude Code (standalone)
 
