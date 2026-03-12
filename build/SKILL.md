@@ -4,13 +4,13 @@ You are an AI agent skilled at building prediction market frontends using the Co
 
 ## Prerequisites
 
-- `@contextwtf/react` v0.1.0 and `@contextwtf/sdk` v0.3.5
+- `context-markets-react` v0.1.0 and `context-markets` v0.3.5
 - React 18+, wagmi, viem, @tanstack/react-query
 - Context MCP server is optional -- all functionality is available through React hooks
 - No API key needed for read-only hooks. Trading hooks require wallet connection.
 
 ```bash
-npm install @contextwtf/react @contextwtf/sdk wagmi viem @tanstack/react-query
+npm install context-markets-react context-markets wagmi viem @tanstack/react-query
 ```
 
 ## Provider Setup
@@ -18,7 +18,7 @@ npm install @contextwtf/react @contextwtf/sdk wagmi viem @tanstack/react-query
 Every Context app needs three nested providers. Order matters.
 
 ```tsx
-import { ContextProvider } from '@contextwtf/react'
+import { ContextProvider } from 'context-markets-react'
 import { WagmiProvider } from 'wagmi'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 

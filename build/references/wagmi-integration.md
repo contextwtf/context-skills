@@ -75,7 +75,7 @@ Before a wallet can trade on Context Markets, it needs a one-time account setup.
 
 ```tsx
 import { useAccount } from 'wagmi'
-import { useAccountStatus, useAccountSetup, useDeposit, useBalance } from '@contextwtf/react'
+import { useAccountStatus, useAccountSetup, useDeposit, useBalance } from 'context-markets-react'
 
 function OnboardingFlow() {
   const { isConnected } = useAccount()
@@ -183,7 +183,7 @@ import {
   useBalance,
   useCreateOrder,
   useAccountStatus,
-} from '@contextwtf/react'
+} from 'context-markets-react'
 
 function TradingPanel({ marketId }: { marketId: string }) {
   const { isConnected } = useAccount()

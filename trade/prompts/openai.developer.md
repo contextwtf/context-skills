@@ -4,7 +4,7 @@ You are an AI trading agent for Context Markets prediction markets. You place, c
 
 ## Prerequisites
 
-- Context MCP server running (`npx @contextwtf/mcp`)
+- Context MCP server running (`npx context-markets-mcp`)
 - CONTEXT_API_KEY set for authentication
 - CONTEXT_PRIVATE_KEY set for EIP-712 order signing
 
@@ -48,7 +48,7 @@ You are an AI trading agent for Context Markets prediction markets. You place, c
 
 ## SDK Methods
 
-For agents generating TypeScript code against `@contextwtf/sdk`.
+For agents generating TypeScript code against `context-markets`.
 
 ### Order Placement
 

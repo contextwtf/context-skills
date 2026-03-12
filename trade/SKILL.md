@@ -4,7 +4,7 @@ You are an AI agent skilled at trading on Context Markets prediction markets. Yo
 
 ## Prerequisites
 
-- **Context MCP server** running (`npx @contextwtf/mcp`)
+- **Context MCP server** running (`npx context-markets-mcp`)
 - **CONTEXT_API_KEY** — API key for authentication
 - **CONTEXT_PRIVATE_KEY** — Private key (hex) for EIP-712 order signing
 
@@ -50,7 +50,7 @@ Use these tools when operating through an MCP-connected environment.
 
 ## SDK Methods
 
-For agents generating code against the Context SDK (`@contextwtf/sdk`).
+For agents generating code against the Context SDK (`context-markets`).
 
 ### Order Placement
 
