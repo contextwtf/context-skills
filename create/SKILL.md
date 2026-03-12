@@ -245,7 +245,7 @@ context_create_market({ question: "Will Bitcoin hit $150,000 before April 2026?"
 Agent submit is a two-step process: first submit your draft and wait for oracle approval, then create the on-chain market from the approved question.
 
 ```typescript
-import { ContextClient } from '@contextwtf/sdk'
+import { ContextClient } from 'context-markets'
 
 const ctx = new ContextClient({ apiKey: process.env.CONTEXT_API_KEY })
 
@@ -328,15 +328,15 @@ ctx.markets.create(questionId: string): Promise<CreateMarketResult>
 ### Key Types
 
 ```typescript
-import type { AgentSubmitMarketDraft, AgentSubmitComparison, Bucket } from '@contextwtf/sdk'
+import type { AgentSubmitMarketDraft, AgentSubmitComparison, Bucket } from 'context-markets'
 ```
 
 ## React Hooks
 
-For React applications using `@contextwtf/react`:
+For React applications using `context-markets-react`:
 
 ```typescript
-import { useAgentSubmit, useAgentSubmitAndWait } from '@contextwtf/react'
+import { useAgentSubmit, useAgentSubmitAndWait } from 'context-markets-react'
 
 // Fire-and-forget submission
 const { mutate: submit } = useAgentSubmit()

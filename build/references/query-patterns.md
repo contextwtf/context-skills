@@ -7,7 +7,7 @@ TanStack Query best practices for Context React hooks.
 All Context hooks use a structured query key factory. Use `contextKeys` to interact with the cache directly.
 
 ```typescript
-import { contextKeys } from '@contextwtf/react'
+import { contextKeys } from 'context-markets-react'
 
 // Market keys
 contextKeys.markets.list(params?)      // useMarkets query key
@@ -34,7 +34,7 @@ After placing or cancelling an order, invalidate related queries so the UI refle
 
 ```tsx
 import { useQueryClient } from '@tanstack/react-query'
-import { contextKeys, useCreateOrder } from '@contextwtf/react'
+import { contextKeys, useCreateOrder } from 'context-markets-react'
 
 function OrderForm({ marketId }: { marketId: string }) {
   const queryClient = useQueryClient()

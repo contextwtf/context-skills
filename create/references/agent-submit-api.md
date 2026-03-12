@@ -176,8 +176,8 @@ curl -X POST https://api.context.markets/v2/questions/agent-submit \
 ## SDK Usage
 
 ```typescript
-import { ContextClient } from '@contextwtf/sdk'
-import type { AgentSubmitMarketDraft } from '@contextwtf/sdk'
+import { ContextClient } from 'context-markets'
+import type { AgentSubmitMarketDraft } from 'context-markets'
 
 const ctx = new ContextClient({ apiKey: process.env.CONTEXT_API_KEY })
 
@@ -211,7 +211,7 @@ const result = await ctx.questions.getSubmission(submissionId)
 ## React Hooks
 
 ```typescript
-import { useAgentSubmit, useAgentSubmitAndWait } from '@contextwtf/react'
+import { useAgentSubmit, useAgentSubmitAndWait } from 'context-markets-react'
 
 // Fire-and-forget
 const { mutate: submit } = useAgentSubmit()

@@ -30,7 +30,7 @@ done
 echo ""
 echo "Done. Add the Context MCP server if you haven't already:"
 echo ""
-echo "  claude mcp add context-markets -- npx @contextwtf/mcp"
+echo "  claude mcp add context-markets -- npx context-markets-mcp"
 echo ""
 
 if [[ " ${SKILLS[*]} " =~ " trade " ]] || [[ " ${SKILLS[*]} " =~ " create " ]]; then

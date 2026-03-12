@@ -1,6 +1,6 @@
 # React Hooks API Reference
 
-Complete hook signatures for `@contextwtf/react`. All query hooks return TanStack Query results (`{ data, isLoading, error, refetch, ... }`). All mutation hooks return `{ mutate, mutateAsync, isPending, error, ... }`.
+Complete hook signatures for `context-markets-react`. All query hooks return TanStack Query results (`{ data, isLoading, error, refetch, ... }`). All mutation hooks return `{ mutate, mutateAsync, isPending, error, ... }`.
 
 ## Market Hooks
 

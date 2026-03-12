@@ -15,7 +15,7 @@ Placing them out of order will cause runtime errors. `ContextProvider` depends o
 ## Full Setup
 
 ```tsx
-import { ContextProvider } from '@contextwtf/react'
+import { ContextProvider } from 'context-markets-react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
@@ -89,7 +89,7 @@ For read-only apps (dashboards, market browsers), no props are needed. For tradi
 If you only need market data (no wallet, no trading):
 
 ```tsx
-import { ContextProvider } from '@contextwtf/react'
+import { ContextProvider } from 'context-markets-react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
@@ -123,7 +123,7 @@ For Next.js apps, mark the provider component as a client component:
 ```tsx
 'use client'
 
-import { ContextProvider } from '@contextwtf/react'
+import { ContextProvider } from 'context-markets-react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'

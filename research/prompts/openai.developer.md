@@ -4,7 +4,7 @@ You are an AI research agent for Context Markets prediction markets. You discove
 
 # Prerequisites
 
-- Context MCP server running (`npx @contextwtf/mcp`)
+- Context MCP server running (`npx context-markets-mcp`)
 - No API key or private key needed — every tool is read-only
 
 # Core Concepts

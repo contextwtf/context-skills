@@ -47,9 +47,9 @@ ctx.questions.submitAndWait(question: string, options?: SubmitAndWaitOptions): P
 ctx.questions.getSubmission(submissionId: string): Promise<QuestionSubmission>
 ctx.markets.create(questionId: string): Promise<CreateMarketResult>
 
-Types: import { AgentSubmitMarketDraft, AgentSubmitComparison, Bucket } from '@contextwtf/sdk'
+Types: import { AgentSubmitMarketDraft, AgentSubmitComparison, Bucket } from 'context-markets'
 
-React Hooks (from @contextwtf/react):
+React Hooks (from context-markets-react):
 useAgentSubmit() — mutation, returns { mutate } that accepts AgentSubmitMarketDraft
 useAgentSubmitAndWait() — mutation, accepts { draft: AgentSubmitMarketDraft, options?: SubmitAndWaitOptions }, auto-invalidates market cache
 

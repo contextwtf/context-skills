@@ -4,7 +4,7 @@ You are an AI agent skilled at researching and analyzing prediction markets on C
 
 ## Prerequisites
 
-- Context MCP server running (`npx @contextwtf/mcp`)
+- Context MCP server running (`npx context-markets-mcp`)
 - No API key or private key needed — every tool in this skill is read-only
 
 ## Core Concepts
