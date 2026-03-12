@@ -40,7 +40,9 @@ cd context-skills && ./install.sh
 
 ### Other Platforms
 
-See the [full installation guide](https://docs.context.markets/agents/skills) for Codex, OpenAI API, Claude API, Cursor, and ChatGPT.
+Copy the contents of `full.md` from any skill's `prompts/` directory into your system prompt or custom instructions. Platform-specific wrappers are available for OpenAI (`openai.developer.md`) and Claude (`claude.system.md`).
+
+See the [full installation guide](https://docs.context.markets/agents/skills) for details.
 
 ## Adding the MCP Server
 
@@ -49,6 +51,23 @@ Most skills require the Context MCP server:
 ```bash
 claude mcp add context-markets -- npx @contextwtf/mcp
 ```
+
+```bash
+export CONTEXT_API_KEY="your-api-key"       # Required for Trade / Create
+export CONTEXT_PRIVATE_KEY="0x..."          # Required for Trade / Create
+```
+
+## How Skills Work
+
+Skills use a 3-layer prompt architecture:
+
+| Layer | Name | What it contains |
+|-------|------|-----------------|
+| A | Harness | Runtime-specific wrapper (Claude system prompt, OpenAI developer message) |
+| B | Skill | Canonical `SKILL.md` + reference files — identical across all platforms |
+| C | Task | Your request ("place a buy order", "find trending markets") |
+
+Layer B is the same everywhere. Only Layer A changes per platform.
 
 ## Documentation
 
