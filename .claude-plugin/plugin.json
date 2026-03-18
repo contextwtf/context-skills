@@ -1,0 +1,15 @@
+{
+  "name": "context-skills",
+  "version": "1.0.0",
+  "description": "Trade, research, and build on Context Markets — MCP server, expert skills, and API reference in one install",
+  "author": {
+    "name": "Context",
+    "url": "https://context.markets"
+  },
+  "homepage": "https://docs.context.markets/agents/plugin",
+  "repository": "https://github.com/contextwtf/context-skills",
+  "license": "MIT",
+  "keywords": ["prediction-markets", "trading", "context", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

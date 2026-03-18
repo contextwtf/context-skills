@@ -12,6 +12,12 @@
 
 ## Install
 
+**Claude Code (plugin):**
+```bash
+claude plugin add contextwtf/context-skills
+```
+
+**Any agent (skills CLI):**
 ```bash
 npx skills add contextwtf/context-skills
 ```
@@ -48,9 +54,8 @@ Need exact method signatures, endpoint params, or response schemas? See the [API
 |---------|-------------|
 | **[context-markets](https://github.com/contextwtf/context-sdk)** | TypeScript SDK for trading |
 | **[context-markets-react](https://github.com/contextwtf/context-react)** | React hooks for market data and trading |
-| **[context-markets-mcp](https://github.com/contextwtf/context-mcp)** | MCP server for AI agents (17 tools) |
+| **[context-markets-mcp](https://github.com/contextwtf/context-mcp)** | MCP server for AI agents (19 tools) |
 | **[context-markets-cli](https://github.com/contextwtf/context-cli)** | CLI for trading from the terminal |
-| **[context-plugin](https://github.com/contextwtf/context-plugin)** | Claude Code plugin |
 
 ## License
 
