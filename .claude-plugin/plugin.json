@@ -1,6 +1,6 @@
 {
   "name": "context-skills",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Trade, research, and build on Context Markets — MCP server, expert skills, and API reference in one install",
   "author": {
     "name": "Context",
@@ -10,6 +10,26 @@
   "repository": "https://github.com/contextwtf/context-skills",
   "license": "MIT",
   "keywords": ["prediction-markets", "trading", "context", "mcp"],
-  "skills": "./skills/",
+  "skills": [
+    "./skills/trade",
+    "./skills/trade/place-order",
+    "./skills/trade/market-maker",
+    "./skills/trade/bulk-operations",
+    "./skills/trade/manage-positions",
+    "./skills/trade/diagnose-order",
+    "./skills/research",
+    "./skills/research/market-scanner",
+    "./skills/research/mispricing-finder",
+    "./skills/research/portfolio-analysis",
+    "./skills/research/activity-monitor",
+    "./skills/build",
+    "./skills/build/trading-app",
+    "./skills/build/market-widget",
+    "./skills/build/portfolio-dashboard",
+    "./skills/build/account-setup-flow",
+    "./skills/create",
+    "./skills/create/news-to-market",
+    "./skills/create/diagnose-resolution"
+  ],
   "mcpServers": "./.mcp.json"
 }

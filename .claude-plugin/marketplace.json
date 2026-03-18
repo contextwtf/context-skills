@@ -12,7 +12,28 @@
       "name": "context-skills",
       "source": "./",
       "description": "Trade, research, and build on Context Markets — MCP server, expert skills, and API reference in one install",
-      "version": "1.0.1"
+      "version": "1.0.2",
+      "skills": [
+        "./skills/trade",
+        "./skills/trade/place-order",
+        "./skills/trade/market-maker",
+        "./skills/trade/bulk-operations",
+        "./skills/trade/manage-positions",
+        "./skills/trade/diagnose-order",
+        "./skills/research",
+        "./skills/research/market-scanner",
+        "./skills/research/mispricing-finder",
+        "./skills/research/portfolio-analysis",
+        "./skills/research/activity-monitor",
+        "./skills/build",
+        "./skills/build/trading-app",
+        "./skills/build/market-widget",
+        "./skills/build/portfolio-dashboard",
+        "./skills/build/account-setup-flow",
+        "./skills/create",
+        "./skills/create/news-to-market",
+        "./skills/create/diagnose-resolution"
+      ]
     }
   ]
 }
