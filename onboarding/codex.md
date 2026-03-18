@@ -1,12 +1,12 @@
 # Setting Up Context Markets on Codex
 
-You are an AI agent setting up Context Markets for your user. Follow these steps in order.
+You are an AI agent setting up Context Markets for your user. Follow these steps in order. **Do not skip ahead** — complete each step and verify before moving on.
 
-## Step 1: Install CLI and MCP Server
+## Step 1: Install Tools
 
-Install both tools — they share credentials via `~/.config/context/config.env`.
+Install all three components — CLI, MCP server, and skills.
 
-**CLI** (interactive setup wizard + shell access):
+**CLI** (headless setup + shell access):
 ```bash
 npm install -g context-markets-cli
 ```
@@ -16,52 +16,66 @@ npm install -g context-markets-cli
 codex mcp add context-markets -- npx context-markets-mcp
 ```
 
-## Step 2: Run Setup Wizard
-
-The CLI has an interactive setup wizard that walks the user through everything:
-
+**Skills (full install):**
 ```bash
-context setup
+npx skills add contextwtf/context-skills -a codex --full-depth --yes
 ```
 
-This will:
-1. Ask for the user's API key (get one at **https://context.markets/settings**)
-2. Generate a new wallet (or import an existing private key)
-3. Save credentials to `~/.config/context/config.env` (shared with MCP)
-4. Check ETH balance for gas fees — show the wallet address and wait for funding
-5. Approve contracts for trading
-6. Prompt for an optional USDC deposit
-
-For non-interactive (agent-driven) setup:
-```bash
-context setup --output json --save
-```
-
-**Fallback — if the CLI isn't available**, use MCP tools directly:
-```
-context_generate_wallet({ apiKey: "<key>" })
-context_account_setup()
-context_deposit({ amount: <usdc_amount> })
-```
-
-## Step 3: Install Skills
-
-```bash
-npx skills add contextwtf/context-skills -a codex
-```
-
-This installs all Context skills to `.agents/skills/` where Codex discovers them automatically. Codex reads the `name` and `description` from each SKILL.md and loads the full content on demand.
+This installs all Context skills to `.agents/skills/` where Codex discovers them automatically.
 
 Alternatively, install specific skills:
-
 ```bash
-npx skills add contextwtf/context-skills -a codex --skill context-trade --skill context-research
+npx skills add contextwtf/context-skills -a codex --skill context-trade --skill context-research --full-depth --yes
 ```
+
+## Step 2: Get API Key and Verify (Browse & Research)
+
+1. Ask the user for their Context API key. They can get one at **https://context.markets/settings**.
+
+2. Run the headless setup to save credentials:
+```bash
+context setup --output json --save --api-key <USER_API_KEY>
+```
+This saves the API key to `~/.config/context/config.env` and generates a wallet. The wallet is a harmless side effect — the user doesn't need to fund or use it unless they want to trade.
+
+3. Verify the MCP server is working by calling `context_list_markets`. You should see a list of active prediction markets.
+
+4. **If MCP fails**, troubleshoot:
+   - Check that `~/.config/context/config.env` exists and contains `CONTEXT_API_KEY`
+   - Verify the MCP server is registered with Codex
+   - Try running `npx context-markets-mcp` directly to check for errors
+
+5. Run `/skills` to confirm the Context skills are loaded.
+
+6. Tell the user:
+
+> **You're set up to browse and research markets.** The skills are installed and the MCP server is connected. If you want to place trades, we need to set up your wallet for trading — want to do that now?
+
+**STOP here and wait for the user's response.** Do not proceed to Step 3 unless the user says yes.
+
+## Step 3: Trading Setup (Optional)
+
+Only proceed if the user explicitly wants to trade. A wallet was already generated in Step 2 — this step is about funding and approving it.
+
+1. Ask the user: **"Do you already have a private key or wallet you'd like to use, or do you want to use the one we just generated?"**
+   - If they have an existing key: `context setup --output json --save --private-key <THEIR_KEY>`
+   - If using the generated wallet: no action needed, it's already saved
+
+2. Show the wallet address (from the Step 2 output) and tell the user to fund it with ETH on Base for gas fees. Even a small amount (0.001 ETH) is enough for many transactions.
+
+3. Once funded, approve contracts:
+```bash
+context approve --output json
+```
+
+4. Ask the user if they want to deposit USDC to start trading. Explain this is optional — they can always deposit later with `context deposit <amount>`.
 
 ## Step 4: Verify
 
-Call `context_list_markets` to confirm the MCP server is connected. You should see active prediction markets.
+Only needed if you completed Step 3:
 
-Run `/skills` to confirm the Context skills are loaded.
+```bash
+context account status --output json
+```
 
-Run `context account status` in the CLI to confirm the wallet is configured and ready to trade.
+Confirm the wallet is configured and contracts are approved.
