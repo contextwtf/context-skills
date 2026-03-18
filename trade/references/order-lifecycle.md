@@ -4,112 +4,48 @@ How orders move through states from creation to settlement.
 
 ## States
 
-| State | Description |
-|-------|-------------|
-| `open` | Order is resting on the orderbook, waiting for a match. |
-| `filled` | Order has been completely filled. All contracts matched. |
-| `partially_filled` | Some contracts matched, remainder still on the book. |
-| `cancelled` | Trader cancelled the order via `cancel` or `cancelReplace`. |
-| `expired` | Order's expiry timestamp passed without being fully filled. |
-| `voided` | System rejected the order. See void reasons below. |
-
-## State Transitions
-
 ```
-Created
-  |
-  v
-open -----> filled              (fully matched)
-  |
-  |-------> partially_filled    (some matched, rest on book)
-  |           |
-  |           |---> filled      (remainder matched)
-  |           |---> cancelled   (trader cancels remainder)
-  |           |---> expired     (expiry reached)
-  |           |---> voided      (system rejects remainder)
-  |
-  |-------> cancelled           (trader cancels)
-  |-------> expired             (expiry reached)
-  |-------> voided              (system rejects)
+open ──→ filled
+     ──→ cancelled (by trader)
+     ──→ expired (expirySeconds elapsed)
+     ──→ voided (system rejected)
 ```
+
+| Status | Meaning |
+|--------|---------|
+| `open` | Active on the orderbook, waiting to be filled |
+| `filled` | Fully filled — all contracts matched |
+| `cancelled` | Cancelled by the trader via `cancel()` or `cancelReplace()` |
+| `expired` | The `expirySeconds` timer elapsed without full fill |
+| `voided` | System rejected the order (see void reasons below) |
+
+**Note:** `partially_filled` is NOT a separate status. An order with partial fills remains `open` with a non-zero fill count. Check the `fills` array on the order to see partial fill progress.
 
 ## Void Reasons
 
-An order is voided when the system cannot process it. Common reasons:
+When an order is voided, the `voidReason` field explains why:
 
-| Reason | Description |
-|--------|-------------|
-| `insufficient_balance` | Trader does not have enough USDC to cover the order. |
-| `self_trade_prevention` | Order would match against another order from the same trader. |
-| `market_closed` | The market is no longer accepting orders (resolved, paused, or expired). |
-| `invalid_price` | Price is outside the valid range (1-99 cents). |
-| `invalid_signature` | EIP-712 signature verification failed. |
-| `nonce_already_used` | The nonce has been used by a previous order. |
-| `market_not_found` | The specified market ID does not exist. |
-| `inventory_constraint` | Order violates the inventory mode constraint. |
+| Reason | Cause | Fix |
+|--------|-------|-----|
+| `insufficient_balance` | Not enough USDC in settlement balance | Deposit more: `ctx.account.deposit(amount)` |
+| `self_trade_prevention` | Your buy and sell orders crossed each other | Cancel one side before placing the other |
+| `market_closed` | Market has ended or been resolved | Cannot trade — check market status first |
+| `invalid_price` | Price outside 1-99 range | Use a valid price in cents |
+| `invalid_signature` | EIP-712 signature doesn't match trader address | Verify CONTEXT_PRIVATE_KEY matches your account |
+| `nonce_already_used` | Duplicate nonce (same order submitted twice) | SDK generates unique nonces automatically — this usually means a retry collision |
+| `market_not_found` | Market ID doesn't exist | Verify the market ID with `context_get_market` |
+| `inventory_constraint` | `inventoryModeConstraint` prevented execution | Usually means trying to sell without holding tokens |
 
-## Checking Order Status
+## Fill Tracking
 
-### Via MCP
-
-```
-context_my_orders { marketId: "0xabc123..." }
-```
-
-Returns all your open orders for the given market. To check a specific order's final state, you need the SDK.
-
-### Via SDK
-
-```typescript
-// Get a specific order by ID
-const order = await ctx.orders.get("order-id-123")
-console.log(`Status: ${order.status}`)
-if (order.voidReason) {
-  console.log(`Void reason: ${order.voidReason}`)
-}
-
-// List all your orders, including non-open ones
-const { orders } = await ctx.orders.list({
-  marketId: "0xabc123...",
-  status: "filled",
-})
-
-// Get recent orders across all markets
-const { orders: recent } = await ctx.orders.recent({ limit: 20 })
-```
-
-## Fills
-
-When an order matches, a fill is created. Each fill records:
-
-- The matched size (number of contracts)
-- The fill price
-- The counterparty order
-- The timestamp
-
-A partially filled order has one or more fills and a `remainingSize > 0`. You can check fill progress:
-
-```typescript
-const order = await ctx.orders.get("order-id-123")
-console.log(`Filled: ${order.filledSize} / ${order.size}`)
-console.log(`Remaining: ${order.remainingSize}`)
-```
+- Each fill is recorded with price, size, fee, and timestamp
+- An `open` order can have partial fills — check `fills.length` and sum of fill sizes
+- Once total filled size equals order size, status transitions to `filled`
+- `cancelReplace` on a partially-filled order cancels the remaining unfilled portion
 
 ## Expiry
 
-Orders can optionally include an `expiry` timestamp (unix seconds). When set:
-
-- The order is valid until that timestamp.
-- After expiry, the order transitions to `expired` and any unfilled portion is removed from the book.
-- Set `expiry: 0` or omit it for no expiry (good-till-cancelled).
-
-```typescript
-await ctx.orders.create({
-  marketId: "0xabc123...",
-  side: "buy",
-  outcomeIndex: 0,
-  price: 65,
-  size: 10,
-  expiry: Math.floor(Date.now() / 1000) + 3600, // expires in 1 hour
-})
-```
+- Set `expirySeconds` on `PlaceOrderRequest` to auto-expire orders
+- `0` (default) = no expiry — order stays open until filled, cancelled, or voided
+- Timer starts from order creation, not from last fill
+- Expired orders with partial fills keep those fills — only the unfilled remainder expires

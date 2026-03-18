@@ -1,339 +1,148 @@
-# Order API Reference
+# Orders API Reference
 
-Complete reference for the Context SDK order methods.
+Complete method signatures and types for `ctx.orders.*` from the `context-markets` SDK.
 
 ## Types
 
 ### PlaceOrderRequest
 
-```typescript
+```ts
 interface PlaceOrderRequest {
-  marketId: string
-  side: "buy" | "sell"
-  outcomeIndex: number  // 0 = YES, 1 = NO
-  price: number         // cents, 1-99
-  size: number          // number of contracts
-  expiry?: number       // unix timestamp, optional (0 = no expiry)
+  marketId: string;
+  outcome: "yes" | "no";
+  side: "buy" | "sell";
+  priceCents: number;           // 1-99
+  size: number;                 // min 0.01 contracts
+  expirySeconds?: number;       // 0 = no expiry (default)
+  inventoryModeConstraint?: 0 | 1 | 2;  // 0=ANY, 1=REQUIRE_INVENTORY, 2=REQUIRE_NO_INVENTORY
+  makerRoleConstraint?: 0 | 1 | 2;      // 0=ANY, 1=MAKER_ONLY ⚠️, 2=TAKER_ONLY
 }
 ```
+
+> **Never set `makerRoleConstraint: 1` (MAKER_ONLY).** When two maker-only orders cross, Settlement reverts with `InvalidRoleConstraint`, poisoning the entire batch and blocking all trading on the market.
 
 ### PlaceMarketOrderRequest
 
-```typescript
+```ts
 interface PlaceMarketOrderRequest {
-  marketId: string
-  side: "buy" | "sell"
-  outcomeIndex: number  // 0 = YES, 1 = NO
-  maxPrice: number      // max cents willing to pay
-  maxSize: number       // max contracts to fill
+  marketId: string;
+  outcome: "yes" | "no";
+  side: "buy" | "sell";
+  maxPriceCents: number;        // worst acceptable price
+  maxSize: number;              // max contracts to fill
+  expirySeconds?: number;
 }
 ```
 
-### CreateOrderResult
+### Return Types
 
-```typescript
-interface CreateOrderResult {
-  orderId: string
-  nonce: Hex
-  status: "open" | "filled" | "partially_filled"
-  filledSize?: number
-  filledPrice?: number
-}
-```
-
-### CancelResult
-
-```typescript
-interface CancelResult {
-  nonce: Hex
-  status: "cancelled"
-}
-```
-
-### CancelReplaceResult
-
-```typescript
-interface CancelReplaceResult {
-  cancelledNonce: Hex
-  newOrderId: string
-  newNonce: Hex
-  status: "open" | "filled" | "partially_filled"
-}
-```
-
-### BulkResult
-
-```typescript
-interface BulkResult {
-  created: CreateOrderResult[]
-  cancelled: CancelResult[]
-}
+```ts
+type CreateOrderResult = { order: Order; fills: Fill[] };
+type CancelResult = { nonce: string; status: string };
+type CancelReplaceResult = { cancel: CancelResult; create: CreateOrderResult };
+type BulkResult = { results: (CreateOrderResult | CancelResult)[]; errors: unknown[] };
 ```
 
 ### Order
 
-```typescript
+```ts
 interface Order {
-  id: string
-  marketId: string
-  trader: Address
-  side: "buy" | "sell"
-  outcomeIndex: number
-  price: number
-  size: number
-  filledSize: number
-  remainingSize: number
-  status: "open" | "filled" | "partially_filled" | "cancelled" | "expired" | "voided"
-  nonce: Hex
-  createdAt: string
-  updatedAt: string
-  voidReason?: string
+  id: string;
+  marketId: string;
+  trader: string;
+  nonce: string;
+  side: number;           // 0=buy, 1=sell (on-chain encoding)
+  outcomeIndex: number;   // 0=YES, 1=NO
+  price: string;          // on-chain encoded
+  size: string;           // on-chain encoded
+  status: OrderStatus;
+  fills: Fill[];
+  createdAt: string;
+  expiresAt?: string;
 }
+
+type OrderStatus = "open" | "filled" | "cancelled" | "expired" | "voided";
 ```
 
-### OrderList
+### Query Params
 
-```typescript
-interface OrderList {
-  orders: Order[]
-  cursor?: string
-  hasMore: boolean
-}
-```
-
-### GetOrdersParams
-
-```typescript
+```ts
 interface GetOrdersParams {
-  marketId?: string
-  status?: "open" | "filled" | "cancelled" | "expired" | "voided"
-  side?: "buy" | "sell"
-  outcomeIndex?: number
-  cursor?: string
-  limit?: number
+  trader?: Address;
+  marketId?: string;
+  status?: OrderStatus;
+  cursor?: string;        // cursor-based pagination, NOT offset
+  limit?: number;
 }
-```
 
-### GetRecentOrdersParams
-
-```typescript
 interface GetRecentOrdersParams {
-  marketId?: string
-  limit?: number
-}
-```
-
-### OrderSimulateParams
-
-```typescript
-interface OrderSimulateParams {
-  marketId: string
-  side: "buy" | "sell"
-  outcomeIndex: number
-  size: number
-  price?: number  // omit for market order simulation
-}
-```
-
-### OrderSimulateResult
-
-```typescript
-interface OrderSimulateResult {
-  estimatedFillSize: number
-  estimatedFillPrice: number
-  estimatedCost: number
-  estimatedSlippage: number
-  orderbookDepthUsed: number
+  trader?: Address;
+  marketId?: string;
+  status?: OrderStatus;
+  limit?: number;
+  windowSeconds?: number;
 }
 ```
 
 ## Methods
 
-### ctx.orders.create
+### Write Operations
 
-Place a limit order.
-
-```typescript
+```ts
+// Limit order
 ctx.orders.create(req: PlaceOrderRequest): Promise<CreateOrderResult>
-```
 
-**Example:**
-
-```typescript
-const result = await ctx.orders.create({
-  marketId: "0xabc123...",
-  side: "buy",
-  outcomeIndex: 0, // YES
-  price: 65,       // 65 cents
-  size: 10,        // 10 contracts
-})
-console.log(`Order ${result.orderId} placed, nonce: ${result.nonce}`)
-```
-
-### ctx.orders.createMarket
-
-Place a market order that fills immediately against the orderbook.
-
-```typescript
+// Market order (fills immediately at best available price)
 ctx.orders.createMarket(req: PlaceMarketOrderRequest): Promise<CreateOrderResult>
-```
 
-**Example:**
-
-```typescript
-const result = await ctx.orders.createMarket({
-  marketId: "0xabc123...",
-  side: "buy",
-  outcomeIndex: 0,
-  maxPrice: 70,   // won't pay more than 70 cents
-  maxSize: 10,
-})
-console.log(`Filled ${result.filledSize} at avg ${result.filledPrice}`)
-```
-
-### ctx.orders.cancel
-
-Cancel an open order by its nonce.
-
-```typescript
+// Cancel by nonce
 ctx.orders.cancel(nonce: Hex): Promise<CancelResult>
+
+// Atomic cancel + new order
+ctx.orders.cancelReplace(cancelNonce: Hex, newOrder: PlaceOrderRequest): Promise<CancelReplaceResult>
+
+// Batch operations (see bulk-operations.md)
+ctx.orders.bulkCreate(orders: PlaceOrderRequest[]): Promise<CreateOrderResult[]>
+ctx.orders.bulkCancel(nonces: Hex[]): Promise<CancelResult[]>
+ctx.orders.bulk(creates: PlaceOrderRequest[], cancelNonces: Hex[]): Promise<BulkResult>
 ```
 
-**Example:**
+### Read Operations
 
-```typescript
-const result = await ctx.orders.cancel("0xdef456...")
-console.log(`Cancelled order with nonce ${result.nonce}`)
-```
-
-### ctx.orders.cancelReplace
-
-Atomically cancel an existing order and place a new one.
-
-```typescript
-ctx.orders.cancelReplace(
-  cancelNonce: Hex,
-  newOrder: PlaceOrderRequest
-): Promise<CancelReplaceResult>
-```
-
-**Example:**
-
-```typescript
-const result = await ctx.orders.cancelReplace("0xoldnonce...", {
-  marketId: "0xabc123...",
-  side: "buy",
-  outcomeIndex: 0,
-  price: 60, // updated price
-  size: 10,
-})
-console.log(`Replaced ${result.cancelledNonce} with ${result.newOrderId}`)
-```
-
-### ctx.orders.list
-
-List orders with optional filters. Returns paginated results.
-
-```typescript
+```ts
+// List orders (first page)
 ctx.orders.list(params?: GetOrdersParams): Promise<OrderList>
-```
 
-**Example:**
-
-```typescript
-const { orders, hasMore, cursor } = await ctx.orders.list({
-  marketId: "0xabc123...",
-  status: "open",
-  limit: 50,
-})
-```
-
-### ctx.orders.listAll
-
-List all orders matching filters, automatically handling pagination.
-
-```typescript
+// List ALL orders (auto-paginates through all pages)
 ctx.orders.listAll(params?: Omit<GetOrdersParams, "cursor">): Promise<Order[]>
-```
 
-**Example:**
-
-```typescript
-const allOpenOrders = await ctx.orders.listAll({ status: "open" })
-```
-
-### ctx.orders.mine
-
-List your own open orders, optionally filtered by market.
-
-```typescript
+// Your open orders (first page)
 ctx.orders.mine(marketId?: string): Promise<OrderList>
-```
 
-**Example:**
-
-```typescript
-const { orders } = await ctx.orders.mine("0xabc123...")
-for (const order of orders) {
-  console.log(`${order.side} ${order.size} @ ${order.price}`)
-}
-```
-
-### ctx.orders.allMine
-
-List all your open orders, handling pagination automatically.
-
-```typescript
+// Your open orders (auto-paginates)
 ctx.orders.allMine(marketId?: string): Promise<Order[]>
-```
 
-### ctx.orders.get
-
-Get a single order by ID.
-
-```typescript
+// Single order by ID
 ctx.orders.get(id: string): Promise<Order>
-```
 
-**Example:**
-
-```typescript
-const order = await ctx.orders.get("order-id-123")
-console.log(`Status: ${order.status}, filled: ${order.filledSize}/${order.size}`)
-```
-
-### ctx.orders.recent
-
-Get recent orders (most recent first).
-
-```typescript
+// Recent orders (most-recent-first)
 ctx.orders.recent(params?: GetRecentOrdersParams): Promise<OrderList>
-```
 
-**Example:**
-
-```typescript
-const { orders } = await ctx.orders.recent({ limit: 10 })
-```
-
-### ctx.orders.simulate
-
-Simulate an order to preview fill, cost, and slippage without placing it.
-
-```typescript
+// Simulate order execution
 ctx.orders.simulate(params: OrderSimulateParams): Promise<OrderSimulateResult>
 ```
 
-**Example:**
+### Order Simulation
 
-```typescript
-const sim = await ctx.orders.simulate({
-  marketId: "0xabc123...",
-  side: "buy",
-  outcomeIndex: 0,
-  size: 100,
-  price: 65,
-})
-console.log(`Would fill ${sim.estimatedFillSize} @ ${sim.estimatedFillPrice}`)
-console.log(`Slippage: ${sim.estimatedSlippage}%`)
+```ts
+interface OrderSimulateParams {
+  marketId: string;
+  trader: string;
+  maxSize: string;
+  maxPrice: string;
+  outcomeIndex: number;
+  side: "bid" | "ask";
+}
 ```
+
+Note: `ctx.orders.simulate()` is different from `ctx.markets.simulate()`. The order simulation uses on-chain encoding (`side: "bid"|"ask"`, `outcomeIndex`). The market simulation uses human-readable params (`side: "yes"|"no"`, `amount`, `amountType: "usd"|"contracts"`).
