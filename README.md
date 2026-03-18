@@ -10,9 +10,13 @@
   <a href="https://discord.gg/RVmzZsAyM4"><img src="https://img.shields.io/badge/Discord-Join-7289da" alt="Discord" /></a>
 </p>
 
-## Quick Start
+## Install
 
-Drop this repo link to your AI agent. It will read this README, follow the onboarding guide for its platform, and set itself up.
+```bash
+npx skills add contextwtf/context-skills
+```
+
+Or drop this repo link to your AI agent — it will read this README, follow the onboarding guide, and set itself up.
 
 ### Agent Setup
 
@@ -25,18 +29,18 @@ Go to `onboarding/` and follow the guide for your platform:
 
 ## Skills
 
-Each skill has a router (`SKILL.md`) with shared knowledge and a table of workflow subskills. Read the router first, then the subskill that matches your task.
+All skills live in the `skills/` directory. Each has a router (`SKILL.md`) with shared knowledge and a table of workflow subskills.
 
 | Skill | What it does | Subskills |
 |-------|-------------|-----------|
-| [**Trade**](./trade/SKILL.md) | Place, cancel, manage orders | place-order, market-maker, bulk-operations, manage-positions, diagnose-order |
-| [**Research**](./research/SKILL.md) | Discover markets, analyze prices | market-scanner, mispricing-finder, portfolio-analysis, activity-monitor |
-| [**Build**](./build/SKILL.md) | React frontends with hooks | trading-app, market-widget, portfolio-dashboard, account-setup-flow |
-| [**Create**](./create/SKILL.md) | Submit markets from natural language | news-to-market, diagnose-resolution |
+| [**Trade**](./skills/trade/SKILL.md) | Place, cancel, manage orders | place-order, market-maker, bulk-operations, manage-positions, diagnose-order |
+| [**Research**](./skills/research/SKILL.md) | Discover markets, analyze prices | market-scanner, mispricing-finder, portfolio-analysis, activity-monitor |
+| [**Build**](./skills/build/SKILL.md) | React frontends with hooks | trading-app, market-widget, portfolio-dashboard, account-setup-flow |
+| [**Create**](./skills/create/SKILL.md) | Submit markets from natural language | news-to-market, diagnose-resolution |
 
 ## API Reference
 
-Need exact method signatures, endpoint params, or response schemas? See the [API reference guide](./api/README.md) — it points to the live docs, OpenAPI spec, and documentation index.
+Need exact method signatures, endpoint params, or response schemas? See the [API reference guide](./skills/api/README.md) — it points to the live docs, OpenAPI spec, and documentation index.
 
 ## Ecosystem
 

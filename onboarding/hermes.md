@@ -39,10 +39,10 @@ Add the Context MCP server to your Hermes runtime configuration:
 
 Load the SKILL.md files from this repo. The key skills are:
 
-- `trade/SKILL.md` — order management
-- `research/SKILL.md` — market analysis
-- `build/SKILL.md` — React frontends
-- `create/SKILL.md` — market creation
+- `skills/trade/SKILL.md` — order management
+- `skills/research/SKILL.md` — market analysis
+- `skills/build/SKILL.md` — React frontends
+- `skills/create/SKILL.md` — market creation
 
 Each SKILL.md contains a routing table pointing to subskill workflows. Read subskills on demand when a task matches.
 

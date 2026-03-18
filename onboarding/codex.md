@@ -36,10 +36,10 @@ CONTEXT_PRIVATE_KEY = "<key>"
 
 Copy the relevant SKILL.md content into your `AGENTS.md` file, or reference the files by path. The key skills are:
 
-- `trade/SKILL.md` — order management (read this to see available subskill workflows)
-- `research/SKILL.md` — market analysis
-- `build/SKILL.md` — React frontends
-- `create/SKILL.md` — market creation
+- `skills/trade/SKILL.md` — order management (read this to see available subskill workflows)
+- `skills/research/SKILL.md` — market analysis
+- `skills/build/SKILL.md` — React frontends
+- `skills/create/SKILL.md` — market creation
 
 Each SKILL.md contains a routing table. When a task matches a subskill, read that subskill's SKILL.md for detailed steps.
 

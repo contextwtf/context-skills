@@ -36,10 +36,10 @@ This installs the MCP server, skills, and reference files as a package. If you i
 
 If you installed the plugin, skills are loaded automatically. If not, read the SKILL.md files from this repo directly:
 
-- `trade/SKILL.md` — order management
-- `research/SKILL.md` — market analysis
-- `build/SKILL.md` — React frontends
-- `create/SKILL.md` — market creation
+- `skills/trade/SKILL.md` — order management
+- `skills/research/SKILL.md` — market analysis
+- `skills/build/SKILL.md` — React frontends
+- `skills/create/SKILL.md` — market creation
 
 Each SKILL.md has a routing table pointing to subskill workflows.
 
