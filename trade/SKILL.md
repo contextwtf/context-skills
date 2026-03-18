@@ -1,126 +1,112 @@
 ---
 name: context-trade
-description: Place and manage prediction market orders
+description: Place and manage prediction market orders on Context Markets
 ---
 
 # Trade Skill
 
-You are an AI agent skilled at trading on Context Markets prediction markets. You place, cancel, and manage orders using the Context MCP server or SDK.
+Place, cancel, and manage orders on Context Markets prediction markets.
 
 ## Prerequisites
 
 - **Context MCP server** running (`npx context-markets-mcp`)
-- **CONTEXT_API_KEY** — API key for authentication
-- **CONTEXT_PRIVATE_KEY** — Private key (hex) for EIP-712 order signing
+- **CONTEXT_API_KEY** — API key from context.markets
+- **CONTEXT_PRIVATE_KEY** — Ethereum private key for signing orders
+- **Account setup** — must run `ctx.account.setup()` or `context_account_setup` before first trade
+- **Funded account** — deposit USDC via `ctx.account.deposit()` or mint test USDC on testnet
 
-## Critical Rules
+## Shared Foundations
 
-These encoding rules are non-negotiable. Getting them wrong produces invalid orders.
+### Price & Size Encoding
 
-- **Prices** are in cents (1-99). On-chain encoding: `price * 10,000`.
-- **Sizes** are in shares/contracts. On-chain encoding: `size * 1,000,000`.
-- **Nonces** are random `bytes32` values (typically `keccak256(timestamp + random)`).
-- **EIP-712 signing** is required for all order operations. The SDK handles this automatically.
-- **Side**: `0` = buy, `1` = sell.
-- **OutcomeIndex**: `0` = YES, `1` = NO.
-- **Max fee**: 1% of notional (`price * size / 100`), minimum `1`.
-- **YES price + NO price** should approximately equal 100 cents.
-- **Settlement contract**: `0xD91935a82Af48ff79a68134d9Eab8fc9e5d3504D` on Base Sepolia (chainId `84532`).
+- **Prices** are in cents (1–99). A price of 65 = 65% implied probability.
+- **Sizes** are in contracts (min 0.01).
+- On-chain encoding: `price × 10,000`, `size × 1,000,000`. The SDK handles this automatically.
+- YES price + NO price ≈ 100 cents.
 
-## MCP Tools
+### SDK Constructor
 
-Use these tools when operating through an MCP-connected environment.
+```ts
+import { ContextClient } from "context-markets";
 
-| Tool | Purpose | Key Params |
-|------|---------|------------|
-| `context_place_order` | Place a limit order | `{ marketId, side: "yes"\|"no", size, price? }` |
-| `context_cancel_order` | Cancel an open order | `{ nonce }` |
-| `context_my_orders` | List your open orders | `{ marketId? }` |
-| `context_simulate_trade` | Simulate before placing | `{ marketId, side: "yes"\|"no", amount }` |
-| `context_get_orderbook` | Get bid/ask ladder | `{ marketId, depth? }` |
-| `context_get_quotes` | Get current bid/ask/last | `{ marketId }` |
-
-### Workflow: Place a Limit Order
-
-1. Call `context_get_quotes` to see current prices.
-2. Call `context_simulate_trade` to preview fill and slippage.
-3. Call `context_place_order` with your desired price and size.
-4. Call `context_my_orders` to confirm the order is open.
-
-### Workflow: Cancel and Replace
-
-1. Call `context_my_orders` to find the order's nonce.
-2. Call `context_cancel_order` with that nonce.
-3. Call `context_place_order` with updated parameters.
-
-## SDK Methods
-
-For agents generating code against the Context SDK (`context-markets`).
-
-### Order Placement
-
-```typescript
-ctx.orders.create(req: PlaceOrderRequest): Promise<CreateOrderResult>
-ctx.orders.createMarket(req: PlaceMarketOrderRequest): Promise<CreateOrderResult>
+const ctx = new ContextClient({
+  chain: "testnet",       // "mainnet" | "testnet" (defaults to mainnet)
+  apiKey: "ctx_pk_...",
+  signer: { privateKey: "0x..." },
+});
 ```
 
-### Order Cancellation
+### SDK vs MCP: The `side` Mismatch
 
-```typescript
-ctx.orders.cancel(nonce: Hex): Promise<CancelResult>
-ctx.orders.cancelReplace(cancelNonce: Hex, newOrder: PlaceOrderRequest): Promise<CancelReplaceResult>
+The SDK and MCP use `side` to mean different things. This will cause bugs if confused.
+
+**SDK** — `side` is the trade direction, `outcome` is which side of the market:
+```ts
+ctx.orders.create({ marketId, outcome: "yes", side: "buy", priceCents: 45, size: 10 })
 ```
 
-### Bulk Operations
-
-```typescript
-ctx.orders.bulkCreate(orders: PlaceOrderRequest[]): Promise<CreateOrderResult[]>
-ctx.orders.bulkCancel(nonces: Hex[]): Promise<CancelResult[]>
-ctx.orders.bulk(creates: PlaceOrderRequest[], cancelNonces: Hex[]): Promise<BulkResult>
+**MCP** — `side` is the outcome to buy. There is no direction param because the tool always buys:
+```
+context_place_order({ marketId, side: "yes", size: 10, price: 45 })
 ```
 
-### Order Queries
-
-```typescript
-ctx.orders.mine(marketId?: string): Promise<OrderList>
-ctx.orders.list(params?: GetOrdersParams): Promise<OrderList>
-ctx.orders.get(id: string): Promise<Order>
-ctx.orders.recent(params?: GetRecentOrdersParams): Promise<OrderList>
-ctx.orders.simulate(params: OrderSimulateParams): Promise<OrderSimulateResult>
+**CLI** — uses both params explicitly:
+```bash
+context orders create --market <id> --outcome yes --side buy --price 45 --size 10
 ```
 
-## Composite Workflows
+**To sell**, you must use the SDK or CLI. The MCP tool only supports buying.
 
-### Market Maker
+### Account Setup
 
-Quote both sides of a market, monitor fills, and rebalance inventory.
+`ctx.account.setup()` is chain-aware:
+- **Testnet**: uses gasless setup (no ETH needed)
+- **Mainnet**: on-chain transactions (requires ETH for gas)
 
-1. Fetch the orderbook to determine fair value.
-2. Place buy and sell limit orders at a spread around fair value.
-3. Monitor fills with `ctx.orders.mine()` or `context_my_orders`.
-4. When one side fills, cancel the other and re-quote both sides.
-5. Use `ctx.orders.cancelReplace()` or `ctx.orders.bulk()` to atomically update quotes.
+Must run before first trade. Check status with `ctx.account.status()` or `context_account_setup`.
 
-### Order Ladder
+### MCP Tool Catalog (17 tools)
 
-Place multiple orders at different price levels to accumulate a position.
+**Markets (8 — read-only, no auth):**
+`context_list_markets` · `context_get_market` · `context_get_quotes` · `context_get_orderbook` · `context_simulate_trade` · `context_price_history` · `context_get_oracle` · `context_global_activity`
 
-1. Decide on a price range and number of levels.
-2. Use `ctx.orders.bulkCreate()` to place all orders at once.
-3. Monitor fills and optionally replace filled levels.
+**Orders (3 — requires API key + private key):**
+`context_place_order` · `context_cancel_order` · `context_my_orders`
 
-### Arbitrage Scanner
+**Portfolio (2 — requires API key + private key):**
+`context_get_portfolio` · `context_get_balance`
 
-Compare oracle-implied probability to market prices.
+**Account (2 — requires API key + private key):**
+`context_account_setup` · `context_mint_test_usdc`
 
-1. Fetch oracle data to estimate true probability.
-2. Fetch market quotes with `context_get_quotes`.
-3. If the spread exceeds your threshold, place a trade on the mispriced side.
-4. Simulate first with `context_simulate_trade` to check slippage.
+**Questions (2 — requires API key + private key):**
+`context_create_market` · `context_agent_submit_market`
+
+### CLI Commands
+
+```
+context orders create          Place a limit order
+context orders market          Place a market order
+context orders cancel          Cancel by nonce
+context orders cancel-replace  Atomic cancel + new order
+context orders bulk-create     Batch create
+context orders bulk-cancel     Batch cancel
+context orders bulk            Mixed batch (cancels + creates)
+```
+
+## Available Workflows
+
+| Workflow | When to use |
+|----------|-------------|
+| [place-order](./place-order/SKILL.md) | Buy or sell on a specific market |
+| [market-maker](./market-maker/SKILL.md) | Quote both sides with spread management |
+| [bulk-operations](./bulk-operations/SKILL.md) | Batch create, cancel, or rebalance orders |
+| [manage-positions](./manage-positions/SKILL.md) | Cancel, replace, check portfolio and balances |
+| [diagnose-order](./diagnose-order/SKILL.md) | Troubleshoot orders not filling or getting rejected |
 
 ## References
 
-- [Order API Reference](./references/orders.md) — Full method signatures, param types, return types
+- [Orders API](./references/orders.md) — Method signatures, param types, return types
 - [EIP-712 Signing](./references/signing.md) — Domain, types, encoding functions
 - [Order Lifecycle](./references/order-lifecycle.md) — States, transitions, void reasons
 - [Bulk Operations](./references/bulk-operations.md) — Patterns for multi-order operations
