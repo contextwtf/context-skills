@@ -66,17 +66,18 @@ Each onboarding doc is written conversationally — the agent reads it and execu
 **`onboarding/claude-code.md`**
 - Env vars: set via `claude mcp add` env flags or shell export
 - MCP: `claude mcp add context-markets -- npx context-markets-mcp`
-- Skills: available via plugin (`claude plugin add contextwtf/context-plugin`) or manual clone
-- Slash commands: `/context:trade`, `/context:research`, `/context:build`, `/context:create`
+- Skills: available via plugin (`claude plugin add contextwtf/context-plugin`) or manual clone. Manual path: copy `prompts/claude.system.md` into custom instructions, or use `prompts/full.md` for platform-agnostic version.
+- Slash commands (plugin only): `/context:trade`, `/context:research`, `/context:build`, `/context:create`
+- Note: `contextwtf/context-plugin` is the GitHub org/repo path for the plugin, not an npm package — this name is correct.
 
 **`onboarding/codex.md`**
 - Env vars: Codex project config or shell
-- MCP: Codex tool system configuration
+- MCP: Codex tool system configuration (research exact config format during implementation)
 - Skills: copy `prompts/full.md` or `prompts/openai.developer.md` into system prompt
 
 **`onboarding/openclaw.md`**
 - Env vars: messaging platform config or shell
-- MCP: OpenClaw's MCP server config
+- MCP: OpenClaw's MCP server config (research exact config format during implementation)
 - Skills: copy `prompts/full.md` into custom instructions
 
 **`onboarding/hermes.md`**
@@ -106,13 +107,23 @@ Add `name` field to frontmatter in each SKILL.md:
 
 Folder names stay as `build/`, `research/`, `trade/`, `create/`. The namespaced ID is metadata for agent runtimes that need it for indexing.
 
-Format — add YAML frontmatter block at top of each SKILL.md:
+Format — add YAML frontmatter block before existing line 1 content (no other changes to file body):
+
+| Skill | name | description |
+|-------|------|-------------|
+| build | `context-build` | Build prediction market frontends with React |
+| research | `context-research` | Discover and analyze prediction markets |
+| trade | `context-trade` | Place and manage prediction market orders |
+| create | `context-create` | Create prediction markets from natural language |
+
 ```yaml
 ---
 name: context-<skill>
-description: <one-line description>
+description: <description from table above>
 ---
 ```
+
+Version tracking in frontmatter is out of scope for now.
 
 ### File Deletion
 
@@ -132,3 +143,10 @@ Delete `install.sh`. Its functionality is replaced by platform-specific onboardi
 | Create | `onboarding/codex.md` |
 | Create | `onboarding/openclaw.md` |
 | Create | `onboarding/hermes.md` |
+
+## Done When
+
+- An agent on any of the four platforms can read the README, find its onboarding doc, and complete setup without referencing any other file
+- All four SKILL.md files have namespaced frontmatter
+- `install.sh` is deleted
+- Onboarding docs prefer shell exports or platform config for secrets — never suggest creating `.env` files in the repo
