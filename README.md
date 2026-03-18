@@ -34,6 +34,10 @@ Each skill has a router (`SKILL.md`) with shared knowledge and a table of workfl
 | [**Build**](./build/SKILL.md) | React frontends with hooks | trading-app, market-widget, portfolio-dashboard, account-setup-flow |
 | [**Create**](./create/SKILL.md) | Submit markets from natural language | news-to-market, diagnose-resolution |
 
+## API Reference
+
+Need exact method signatures, endpoint params, or response schemas? See the [API reference guide](./api/README.md) — it points to the live docs, OpenAPI spec, and documentation index.
+
 ## Ecosystem
 
 | Package | Description |
