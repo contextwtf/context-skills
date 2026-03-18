@@ -12,6 +12,15 @@
 
 Skills work across Claude, OpenAI, Cursor, Codex, ChatGPT, and any LLM that accepts system prompts.
 
+## Agent Setup
+
+If you're an AI agent getting set up with Context Skills, go to the `onboarding/` folder and read the guide for your platform:
+
+- [Claude Code](./onboarding/claude-code.md)
+- [Codex](./onboarding/codex.md)
+- [OpenClaw](./onboarding/openclaw.md)
+- [Hermes](./onboarding/hermes.md)
+
 ## Skills
 
 | Skill | What it does | Prerequisites |
@@ -20,42 +29,6 @@ Skills work across Claude, OpenAI, Cursor, Codex, ChatGPT, and any LLM that acce
 | [**Research**](./research/) | Market discovery, oracle analysis, price history, simulations | MCP server |
 | [**Build**](./build/) | React components, wallet integration, frontend patterns | None (MCP optional) |
 | [**Create**](./create/) | Market creation from natural language questions | MCP server, API key, private key |
-
-## Install
-
-### Claude Code Plugin (recommended)
-
-```bash
-claude plugin add contextwtf/context-plugin
-```
-
-Skills are available as `/context:trade`, `/context:research`, `/context:build`, `/context:create`.
-
-### Claude Code (standalone)
-
-```bash
-git clone https://github.com/contextwtf/context-skills.git
-cd context-skills && ./install.sh
-```
-
-### Other Platforms
-
-Copy the contents of `full.md` from any skill's `prompts/` directory into your system prompt or custom instructions. Platform-specific wrappers are available for OpenAI (`openai.developer.md`) and Claude (`claude.system.md`).
-
-See the [full installation guide](https://docs.context.markets/agents/skills) for details.
-
-## Adding the MCP Server
-
-Most skills require the Context MCP server:
-
-```bash
-claude mcp add context-markets -- npx context-markets-mcp
-```
-
-```bash
-export CONTEXT_API_KEY="your-api-key"       # Required for Trade / Create
-export CONTEXT_PRIVATE_KEY="0x..."          # Required for Trade / Create
-```
 
 ## How Skills Work
 
