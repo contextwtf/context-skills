@@ -3,18 +3,20 @@
 </p>
 
 <h1 align="center">Context Skills</h1>
-<p align="center">Model-agnostic instruction sets that teach AI agents how to interact with <a href="https://context.markets">Context Markets</a>.</p>
+<p align="center">AI agent skill files for <a href="https://context.markets">Context Markets</a> — prediction markets on Base.</p>
 
 <p align="center">
   <a href="https://github.com/contextwtf/context-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT" /></a>
   <a href="https://discord.gg/RVmzZsAyM4"><img src="https://img.shields.io/badge/Discord-Join-7289da" alt="Discord" /></a>
 </p>
 
-Skills work across Claude, OpenAI, Cursor, Codex, ChatGPT, and any LLM that accepts system prompts.
+## Quick Start
 
-## Agent Setup
+Drop this repo link to your AI agent. It will read this README, follow the onboarding guide for its platform, and set itself up.
 
-If you're an AI agent getting set up with Context Skills, go to the `onboarding/` folder and read the guide for your platform:
+### Agent Setup
+
+Go to `onboarding/` and follow the guide for your platform:
 
 - [Claude Code](./onboarding/claude-code.md)
 - [Codex](./onboarding/codex.md)
@@ -23,31 +25,14 @@ If you're an AI agent getting set up with Context Skills, go to the `onboarding/
 
 ## Skills
 
-| Skill | What it does | Prerequisites |
-|-------|-------------|---------------|
-| [**Trade**](./trade/) | Order placement, bulk operations, cancel-replace, orderbook strategies | MCP server, API key, private key |
-| [**Research**](./research/) | Market discovery, oracle analysis, price history, simulations | MCP server |
-| [**Build**](./build/) | React components, wallet integration, frontend patterns | None (MCP optional) |
-| [**Create**](./create/) | Market creation from natural language questions | MCP server, API key, private key |
+Each skill has a router (`SKILL.md`) with shared knowledge and a table of workflow subskills. Read the router first, then the subskill that matches your task.
 
-## How Skills Work
-
-Skills use a 3-layer prompt architecture:
-
-| Layer | Name | What it contains |
-|-------|------|-----------------|
-| A | Harness | Runtime-specific wrapper (Claude system prompt, OpenAI developer message) |
-| B | Skill | Canonical `SKILL.md` + reference files — identical across all platforms |
-| C | Task | Your request ("place a buy order", "find trending markets") |
-
-Layer B is the same everywhere. Only Layer A changes per platform.
-
-## Documentation
-
-- **[Skills Guide](https://docs.context.markets/agents/skills)** — full setup and usage across all platforms
-- **[Trade Skill](https://docs.context.markets/agents/skills/trade)** — order placement and strategy workflows
-- **[Research Skill](https://docs.context.markets/agents/skills/research)** — market discovery and analysis
-- **[Build Skill](https://docs.context.markets/agents/skills/build)** — React components and frontend patterns
+| Skill | What it does | Subskills |
+|-------|-------------|-----------|
+| [**Trade**](./trade/SKILL.md) | Place, cancel, manage orders | place-order, market-maker, bulk-operations, manage-positions, diagnose-order |
+| [**Research**](./research/SKILL.md) | Discover markets, analyze prices | market-scanner, mispricing-finder, portfolio-analysis, activity-monitor |
+| [**Build**](./build/SKILL.md) | React frontends with hooks | trading-app, market-widget, portfolio-dashboard, account-setup-flow |
+| [**Create**](./create/SKILL.md) | Submit markets from natural language | news-to-market, diagnose-resolution |
 
 ## Ecosystem
 
@@ -55,9 +40,8 @@ Layer B is the same everywhere. Only Layer A changes per platform.
 |---------|-------------|
 | **[context-markets](https://github.com/contextwtf/context-sdk)** | TypeScript SDK for trading |
 | **[context-markets-react](https://github.com/contextwtf/context-react)** | React hooks for market data and trading |
-| **[context-markets-mcp](https://github.com/contextwtf/context-mcp)** | MCP server for AI agents |
+| **[context-markets-mcp](https://github.com/contextwtf/context-mcp)** | MCP server for AI agents (17 tools) |
 | **[context-markets-cli](https://github.com/contextwtf/context-cli)** | CLI for trading from the terminal |
-| **[context-skills](https://github.com/contextwtf/context-skills)** | AI agent skill files |
 | **[context-plugin](https://github.com/contextwtf/context-plugin)** | Claude Code plugin |
 
 ## License

@@ -1,78 +1,55 @@
-# Getting Started with Context Skills on Claude Code
+# Setting Up Context Markets on Claude Code
 
-This guide walks you through setting up Context Markets on Claude Code. Follow each step with your user.
+You are an AI agent setting up Context Markets for your user. Follow these steps in order.
 
 ## Step 1: Get an API Key
 
-Ask the user to go to **https://context.market/settings** and generate an API key.
+Ask the user to go to **https://context.markets/settings** and generate an API key. They should paste it back to you. Store it as `CONTEXT_API_KEY`.
 
-Once they have it, ask them to paste the key back to you. Store it — you'll need it in Step 3.
+## Step 2: Generate a Wallet
 
-> "To get started, I need your Context Markets API key. Head to https://context.market/settings, generate a new key, and paste it here."
-
-## Step 2: Generate an Agent Wallet
-
-Generate a dedicated wallet for the agent. This keeps agent funds separate from the user's personal wallet — the agent gets its own trading identity.
-
-Run:
+Generate an Ethereum private key for signing orders. You can generate one using:
 
 ```bash
-npx context-markets-cli setup --output json
+node -e "console.log('0x' + require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-This returns a new wallet with an `address` and `privateKey`. Save both — you'll need them in Step 3.
+Store this as `CONTEXT_PRIVATE_KEY`. Tell the user to save it securely — this is their trading wallet.
 
-> "I'm generating a dedicated wallet for myself so my trading activity stays separate from your personal funds. This wallet is only used by me to sign orders."
-
-If the user asks why you need your own wallet: it's so agent funds are isolated from their personal holdings. The agent manages its own balance independently.
-
-## Step 3: Set Up the MCP Server
-
-Run the following command to connect the Context Markets MCP server. Replace the placeholders with the API key from Step 1 and the private key from Step 2:
+## Step 3: Add the MCP Server
 
 ```bash
-claude mcp add context-markets \
-  --env CONTEXT_API_KEY=<api-key> \
-  --env CONTEXT_PRIVATE_KEY=<private-key> \
-  -- npx context-markets-mcp
+claude mcp add context-markets -e CONTEXT_API_KEY=<key> -e CONTEXT_PRIVATE_KEY=<key> -- npx context-markets-mcp
 ```
 
-This gives the agent access to all Context Markets tools — listing markets, getting quotes, placing orders, and more.
+This gives you access to 17 MCP tools for browsing, trading, and creating markets.
 
-## Step 4: Install Skills
-
-### Plugin (recommended)
+## Step 4: Install the Plugin (recommended)
 
 ```bash
 claude plugin add contextwtf/context-plugin
 ```
 
-This gives you slash commands out of the box:
+This installs the MCP server, skills, and reference files as a package. If you installed the MCP server manually in Step 3, the plugin will use that configuration.
 
-- `/context:trade` — place and manage orders
-- `/context:research` — discover and analyze markets
-- `/context:build` — generate React components and frontend patterns
-- `/context:create` — create new markets from natural language
+## Step 5: Load Skills
 
-### Manual
+If you installed the plugin, skills are loaded automatically. If not, read the SKILL.md files from this repo directly:
 
-Clone this repo and copy the prompt files into your custom instructions:
+- `trade/SKILL.md` — order management
+- `research/SKILL.md` — market analysis
+- `build/SKILL.md` — React frontends
+- `create/SKILL.md` — market creation
 
-- `prompts/claude.system.md` from any skill folder (e.g., `trade/prompts/claude.system.md`)
-- Or use `prompts/full.md` for the complete skill prompt including references
+Each SKILL.md has a routing table pointing to subskill workflows.
 
-## Step 5: Verify Setup
+## Step 6: Verify
 
-Run a test MCP call to confirm everything is connected:
+Call `context_list_markets` to confirm the MCP server is working. You should see a list of active prediction markets.
 
-```
-context_list_markets
-```
+## Step 7: Fund the Wallet
 
-If you get back a list of markets, the setup is working. You're ready to go.
+- **Testnet:** Call `context_mint_test_usdc` to mint test USDC, then `context_account_setup` to approve contracts.
+- **Mainnet:** The user needs to deposit USDC to the wallet address and call `context_account_setup`.
 
-If it fails, double-check that the API key and private key are correct and that the MCP server was added successfully in Step 3.
-
-## Step 6: Fund Your Wallet (Optional)
-
-To trade, send USDC on Base to your agent wallet address. You can skip this for now and come back when you're ready to place real orders.
+Once setup is complete, you're ready to trade.
