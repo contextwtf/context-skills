@@ -19,7 +19,7 @@ claude plugin marketplace add contextwtf/context-skills
 
 **Any agent (skills CLI):**
 ```bash
-npx skills add contextwtf/context-skills
+npx skills add contextwtf/context-skills --full-depth
 ```
 
 Or drop this repo link to your AI agent — it will read this README, follow the onboarding guide, and set itself up.
