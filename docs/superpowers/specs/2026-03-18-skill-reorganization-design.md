@@ -86,11 +86,20 @@ porto/
 
 - All `prompts/` folders (12 files)
 - `install.sh`
-- `docs/superpowers/plans/` and `docs/superpowers/specs/` (old design docs — this spec replaces them)
+- Old `docs/superpowers/plans/` (this spec and any future plans survive until all phases complete)
+- Broken cross-references in `create/SKILL.md` (lines 419-421 point to `../../references/` files that don't exist)
+
+## Naming Convention
+
+- Category skills: `context-<category>` → `context-trade`, `context-build`, `context-research`, `context-create`
+- Subskills: `context-<category>-<subskill>` → `context-trade-place-order`, `context-trade-market-maker`, `context-build-trading-app`
+- Reference files share the category namespace but aren't skills — they're reference material with no frontmatter
+
+Note: `trade/bulk-operations/SKILL.md` (subskill) and `trade/references/bulk-operations.md` (reference) share a name. This is intentional — the subskill is the workflow ("how to do bulk ops"), the reference is the API spec ("what methods exist"). The subskill points to the reference via its "See Also" section.
 
 ## Subskill SKILL.md Template
 
-Every subskill follows this format:
+Every subskill follows this format. Subskills inherit prerequisites from their category router — only add a `## Prerequisites` section if the subskill has additional requirements beyond the category level (e.g., a funded account for trading subskills vs. read-only for diagnostic subskills).
 
 ```markdown
 ---
@@ -152,6 +161,34 @@ description: <category-level trigger description>
 - ...
 ```
 
+## Subskill Discovery (Runtime Behavior)
+
+Subskills are **not** independently registered. The agent loads a category SKILL.md (via plugin, manual load, or onboarding-configured path). The category SKILL.md contains a routing table with relative links to subskill files. When the agent determines which workflow applies, it reads the subskill SKILL.md on demand. This is progressive disclosure — the agent only pulls what it needs.
+
+This works the same on all platforms: Claude Code, Codex, OpenClaw, Hermes. The only platform-specific step is *how* the category SKILL.md gets loaded initially (covered in onboarding guides).
+
+## SDK vs MCP Semantic Mismatch: `side` Parameter
+
+**Critical gotcha that must be documented prominently in the trade category.**
+
+The SDK and MCP use `side` to mean different things:
+
+- **SDK**: `side: "buy" | "sell"` — the trade direction. Outcome is a separate param: `outcome: "yes" | "no"`.
+  ```ts
+  ctx.orders.create({ marketId, outcome: "yes", side: "buy", priceCents: 45, size: 10 })
+  ```
+
+- **MCP**: `side: "yes" | "no"` — the outcome to buy. There is no separate side param because the tool always buys.
+  ```
+  context_place_order({ marketId, side: "yes", size: 10, price: 45 })
+  ```
+
+**To sell via MCP**, you cannot — the MCP tool only supports buying. Selling requires the SDK or CLI.
+
+**To sell via CLI**: `context orders create --market <id> --outcome yes --side sell --price 55 --size 10`
+
+This mismatch will confuse agents switching between MCP and SDK. Every subskill that involves order placement must specify which interface it's using and use the correct parameter names.
+
 ## Accuracy Corrections
 
 All content will be rewritten against the actual source code (verified 2026-03-18). Key corrections:
@@ -174,14 +211,28 @@ All content will be rewritten against the actual source code (verified 2026-03-1
 | Errors | Not mentioned | `ContextApiError`, `ContextSigningError`, `ContextConfigError` |
 | Deprecated types | Not flagged | `Candle` → use `PricePoint`, `PriceInterval` → use `PriceTimeframe`, `WalletStatus` → use `AccountStatus` |
 
-### MCP Tools
+### MCP Tools (17 total, verified from source)
+
+**Markets (8 — read-only, no auth):**
+`context_list_markets`, `context_get_market`, `context_get_quotes`, `context_get_orderbook`, `context_simulate_trade`, `context_price_history`, `context_get_oracle`, `context_global_activity`
+
+**Orders (3 — requires API key + private key):**
+`context_place_order`, `context_cancel_order`, `context_my_orders`
+
+**Portfolio (2 — requires API key + private key):**
+`context_get_portfolio`, `context_get_balance`
+
+**Account (2 — requires API key + private key):**
+`context_account_setup`, `context_mint_test_usdc`
+
+**Questions (2 — requires API key + private key):**
+`context_create_market`, `context_agent_submit_market`
 
 | Item | Old | New |
 |------|-----|-----|
-| Tool count | 6 in trade, 8 in research | 17 total across all categories |
-| Missing tools | — | `context_get_portfolio`, `context_get_balance`, `context_account_setup`, `context_mint_test_usdc` |
-| `context_agent_submit_market` | Listed in create skill, not verified | Confirmed exists in source — accepts flat params |
-| `context_place_order` | `side: "yes"\|"no"` | Confirmed: `side` is outcome (yes/no), always places buy orders. `price` optional (omit for market order) |
+| Tool count | 6 in trade, 8 in research | 17 total (listed above) |
+| Missing from trade skill | — | `context_get_portfolio`, `context_get_balance`, `context_account_setup`, `context_mint_test_usdc` |
+| `context_place_order` semantics | Not explained | `side` means outcome (yes/no), always buys. See SDK vs MCP mismatch section above. |
 
 ### React SDK
 
@@ -200,15 +251,21 @@ All content will be rewritten against the actual source code (verified 2026-03-1
 | Coverage | Not referenced in any skill | Full command set: markets, orders, portfolio, account, questions, gasless |
 | Package name | — | `context-markets-cli` (npm), `context` (binary) |
 | Output format | — | All output is JSON to stdout, errors JSON to stderr |
-| Commands in create skill | `context questions agent-submit-and-wait` | `context questions submit-and-wait` (no "agent-" prefix in CLI) |
+
+**CLI questions commands (verified from source):**
+- `context questions submit <question>` — simple submit
+- `context questions submit-and-wait <question>` — simple submit + poll
+- `context questions agent-submit` — full draft with all flags
+- `context questions agent-submit-and-wait` — full draft + poll
+- `context questions status <submissionId>` — check status
 
 ### Create Skill
 
 | Item | Old | New |
 |------|-----|-----|
-| SDK simple path | `ctx.questions.submitAndWait("question")` | Confirmed correct — returns `QuestionSubmission` |
-| SDK agent path | `ctx.questions.agentSubmitAndWait({market: {...}})` | Confirmed correct — accepts `AgentSubmitMarketDraft` |
-| CLI commands | `agent-submit-and-wait` | CLI uses `submit-and-wait` (no agent prefix) and `submit` |
+| SDK simple path | `ctx.questions.submitAndWait("question")` | Confirmed correct |
+| SDK agent path | `ctx.questions.agentSubmitAndWait({market: {...}})` | Confirmed correct |
+| CLI commands | Previously said "no agent prefix" | Actually: CLI **does** have both `agent-submit` and `agent-submit-and-wait` as separate commands (verified from source) |
 
 ## Implementation Approach
 
