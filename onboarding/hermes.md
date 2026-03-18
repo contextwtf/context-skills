@@ -37,13 +37,21 @@ Add the Context MCP server to your Hermes runtime configuration:
 
 ## Step 4: Install Skills
 
+**Primary method — clone the repo:**
+
+```bash
+git clone https://github.com/contextwtf/context-skills.git
+```
+
+Then load the SKILL.md files from the `skills/` directory. Each category router (`skills/trade/SKILL.md`, `skills/research/SKILL.md`, etc.) contains a routing table pointing to subskill workflows that you read on demand.
+
+**Fallback — if git clone is unavailable:**
+
 ```bash
 npx skills add contextwtf/context-skills
 ```
 
 If Hermes is not auto-detected, specify the agent flag or use `--all` to install to all detected agents.
-
-The skills will be installed to the appropriate directory. Each SKILL.md is discovered automatically — Hermes reads name and description from frontmatter and loads full content on demand.
 
 ## Step 5: Verify
 
