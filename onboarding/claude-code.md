@@ -48,7 +48,7 @@ context_deposit({ amount: <usdc_amount> })
 
 **Option A — Plugin (recommended):**
 ```bash
-claude plugin add contextwtf/context-skills
+claude plugin marketplace add contextwtf/context-skills
 ```
 This installs the MCP server, skills, and reference files as a package.
 
