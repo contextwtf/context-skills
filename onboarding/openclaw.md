@@ -37,16 +37,13 @@ Add to `~/.openclaw/openclaw.json`:
 
 Restart the OpenClaw gateway after editing the config.
 
-## Step 4: Load Skills
+## Step 4: Install Skills
 
-Load the SKILL.md files from this repo. The key skills are:
+```bash
+npx skills add contextwtf/context-skills -a openclaw
+```
 
-- `skills/trade/SKILL.md` — order management
-- `skills/research/SKILL.md` — market analysis
-- `skills/build/SKILL.md` — React frontends
-- `skills/create/SKILL.md` — market creation
-
-Each SKILL.md contains a routing table pointing to subskill workflows that you read on demand.
+This installs skills to OpenClaw's skill directory where they're discovered automatically.
 
 ## Step 5: Verify
 

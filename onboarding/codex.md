@@ -32,20 +32,25 @@ CONTEXT_API_KEY = "<key>"
 CONTEXT_PRIVATE_KEY = "<key>"
 ```
 
-## Step 5: Load Skills
+## Step 5: Install Skills
 
-Copy the relevant SKILL.md content into your `AGENTS.md` file, or reference the files by path. The key skills are:
+```bash
+npx skills add contextwtf/context-skills -a codex
+```
 
-- `skills/trade/SKILL.md` — order management (read this to see available subskill workflows)
-- `skills/research/SKILL.md` — market analysis
-- `skills/build/SKILL.md` — React frontends
-- `skills/create/SKILL.md` — market creation
+This installs all Context skills to `.agents/skills/` where Codex discovers them automatically. Codex reads the `name` and `description` from each SKILL.md and loads the full content on demand.
 
-Each SKILL.md contains a routing table. When a task matches a subskill, read that subskill's SKILL.md for detailed steps.
+Alternatively, install specific skills:
+
+```bash
+npx skills add contextwtf/context-skills -a codex --skill context-trade --skill context-research
+```
 
 ## Step 6: Verify
 
-Call `context_list_markets` to confirm the MCP server is connected.
+Call `context_list_markets` to confirm the MCP server is connected. You should see active prediction markets.
+
+Run `/skills` to confirm the Context skills are loaded.
 
 ## Step 7: Fund the Wallet
 
