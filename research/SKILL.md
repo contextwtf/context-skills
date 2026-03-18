@@ -1,139 +1,97 @@
 ---
 name: context-research
-description: Discover and analyze prediction markets
+description: Discover and analyze prediction markets on Context Markets
 ---
 
 # Research Skill
 
-You are an AI agent skilled at researching and analyzing prediction markets on Context Markets. You discover markets, interpret oracle signals, analyze price data, simulate trades, and monitor activity — all without placing orders or modifying any state.
+Discover markets, analyze prices, interpret oracle signals, simulate trades, and monitor activity — all read-only.
 
 ## Prerequisites
 
-- Context MCP server running (`npx context-markets-mcp`)
-- No API key or private key needed — every tool in this skill is read-only
+- **Context MCP server** running (`npx context-markets-mcp`)
+- **No API key or private key needed** for read-only tools
+- Portfolio analysis requires API key + private key
 
-## Core Concepts
+## Shared Foundations
 
-**Markets** are binary prediction contracts with YES and NO outcomes. Prices range from 1 to 99 cents and represent the market's implied probability. A YES price of 72 means the market assigns a 72% chance to the event occurring.
+### Market Basics
 
-**Market statuses:** `active` (trading open), `pending` (awaiting resolution), `resolved` (outcome determined), `closed` (no longer trading).
+- Markets are binary YES/NO contracts priced 1–99 cents. Price = implied probability (65c YES = 65% chance).
+- **Statuses:** `active` (trading open), `pending` (awaiting resolution), `resolved` (outcome determined), `closed` (no longer trading).
+- YES price + NO price ≈ 100 cents.
 
-**Oracle** is an AI-powered probability estimator that analyzes markets independently of trading activity. Oracle estimates often diverge from market prices — this divergence is the primary signal for identifying mispricings.
+### Oracle
 
-**Quotes** show the current best bid, best ask, and last trade price for both YES and NO sides. The bid-ask spread indicates liquidity depth.
+The AI oracle evaluates markets independently of trading. It analyzes evidence (social media, web sources) and produces a probability estimate. When the oracle estimate diverges from the market price, that's the primary mispricing signal.
 
-**Simulation** previews what would happen if you placed a trade at a given size — expected fill price, slippage, and fees — without executing anything.
+- **Divergence < 5 cents** — noise, ignore
+- **Divergence 5–10 cents** — monitor, may be opportunity
+- **Divergence > 10 cents** — significant, likely mispricing
 
-## MCP Tools
+### Read-Only MCP Tools (8)
 
-### Market Discovery
+`context_list_markets` · `context_get_market` · `context_get_quotes` · `context_get_orderbook` · `context_simulate_trade` · `context_price_history` · `context_get_oracle` · `context_global_activity`
 
-**`context_list_markets`** — Search and list markets.
-```
-{ query?: string, status?: "active"|"pending"|"resolved"|"closed", category?: string, sortBy?: "new"|"volume"|"trending"|"ending"|"chance", limit?: number }
-```
+### Portfolio MCP Tools (requires auth)
 
-**`context_get_market`** — Get full market details.
-```
-{ marketId: string }
-```
+`context_get_portfolio` · `context_get_balance`
 
-**`context_global_activity`** — Recent trading activity across all markets.
-```
-{} (no params)
-```
+### SDK Methods
 
-### Price and Orderbook
+```ts
+const ctx = new ContextClient();  // no auth needed for reads
 
-**`context_get_quotes`** — Current bid/ask/last prices for a market.
-```
-{ marketId: string }
-```
-
-**`context_get_orderbook`** — Orderbook depth for a market.
-```
-{ marketId: string, depth?: number }
-```
-
-**`context_price_history`** — Historical price data.
-```
-{ marketId: string, timeframe?: "1h"|"6h"|"1d"|"1w"|"1M"|"all" }
-```
-
-### Analysis
-
-**`context_get_oracle`** — AI oracle probability estimate and analysis.
-```
-{ marketId: string }
-```
-
-**`context_simulate_trade`** — Simulate a trade to preview execution.
-```
-{ marketId: string, side: "yes"|"no", amount: number }
-```
-
-## SDK Methods
-
-For agents that generate code against the Context SDK:
-
-```typescript
-// Market discovery
-ctx.markets.list(params?: SearchMarketsParams): Promise<MarketList>
-ctx.markets.get(id: string): Promise<Market>
+// Discovery
+ctx.markets.list(params?: SearchMarketsParams)
+ctx.markets.get(id: string)
 
 // Price data
-ctx.markets.quotes(marketId: string): Promise<Quotes>
-ctx.markets.orderbook(marketId: string, params?: GetOrderbookParams): Promise<Orderbook>
-ctx.markets.fullOrderbook(marketId: string, params?: Omit<GetOrderbookParams, "outcomeIndex">): Promise<FullOrderbook>
-ctx.markets.priceHistory(marketId: string, params?: GetPriceHistoryParams): Promise<PriceHistory>
+ctx.markets.quotes(marketId)
+ctx.markets.orderbook(marketId, params?)
+ctx.markets.fullOrderbook(marketId, params?)  // both YES and NO sides
+ctx.markets.priceHistory(marketId, params?)
 
 // Oracle
-ctx.markets.oracle(marketId: string): Promise<OracleResponse>
-ctx.markets.oracleQuotes(marketId: string): Promise<OracleQuotesResponse>
-ctx.markets.requestOracleQuote(marketId: string): Promise<OracleQuoteRequestResult>
+ctx.markets.oracle(marketId)
+ctx.markets.oracleQuotes(marketId)
+ctx.markets.requestOracleQuote(marketId)
 
 // Simulation
-ctx.markets.simulate(marketId: string, params: SimulateTradeParams): Promise<SimulateResult>
+ctx.markets.simulate(marketId, { side, amount, amountType })
 
 // Activity
-ctx.markets.activity(marketId: string, params?: GetActivityParams): Promise<ActivityResponse>
-ctx.markets.globalActivity(params?: GetActivityParams): Promise<ActivityResponse>
+ctx.markets.activity(marketId, params?)
+ctx.markets.globalActivity(params?)
 ```
 
-## Composite Workflows
+### CLI Commands
 
-### Market Scanner
+```
+context markets list             Search and filter markets
+context markets get <id>         Market details
+context markets quotes <id>      Current bid/ask/last
+context markets orderbook <id>   Orderbook depth
+context markets simulate <id>    Preview a trade
+context markets price-history    Historical prices
+context markets oracle <id>      Oracle probability
+context markets oracle-quotes    Oracle quote history
+context markets activity <id>    Market activity feed
+context markets global-activity  Cross-market activity
+```
 
-Discover and rank active markets by trading interest and liquidity.
+## Available Workflows
 
-1. Call `context_list_markets` with `sortBy: "volume"` to find high-volume markets.
-2. For each market, call `context_get_quotes` to check bid-ask spreads.
-3. Rank by tightest spreads (most liquid) or widest spreads (potential opportunity).
-4. Cross-reference with `sortBy: "trending"` to find markets gaining momentum.
-
-### Oracle Arbitrage Finder
-
-Identify markets where oracle estimates diverge from market prices.
-
-1. Call `context_list_markets` with `status: "active"` to get active markets.
-2. For each market, call `context_get_oracle` to get the oracle probability.
-3. Call `context_get_quotes` to get the current market price.
-4. Compare oracle probability vs market YES price. Flag markets where the difference exceeds a threshold (e.g., 10+ cents).
-5. Use `context_simulate_trade` to check whether the opportunity survives slippage at a realistic size.
-
-### Portfolio Research
-
-Analyze a set of markets for resolution status and exit opportunities.
-
-1. Call `context_get_market` for each market of interest.
-2. Check the market status — `resolved` markets have a known outcome.
-3. For active markets, call `context_get_quotes` to assess current exit prices.
-4. Call `context_price_history` with `timeframe: "1w"` to see recent price trends.
-5. Use `context_get_oracle` to compare your position against the latest oracle estimate.
+| Workflow | When to use |
+|----------|-------------|
+| [market-scanner](./market-scanner/SKILL.md) | Find interesting markets by volume, trend, or liquidity |
+| [mispricing-finder](./mispricing-finder/SKILL.md) | Identify oracle vs market price divergence |
+| [portfolio-analysis](./portfolio-analysis/SKILL.md) | Review positions, P&L, and claimable winnings |
+| [activity-monitor](./activity-monitor/SKILL.md) | Track trading volume and market movements |
 
 ## References
 
-- [Markets API](./references/markets.md) — Full method signatures and parameter types
-- [Oracle System](./references/oracle.md) — Oracle resolution, quotes, and mispricing detection
-- [Price Data](./references/price-data.md) — Quotes, price history, and spread analysis
+- [Markets API](./references/markets.md) — Search params, method signatures, return types
+- [Oracle System](./references/oracle.md) — Oracle resolution, quotes, mispricing detection
+- [Price Data](./references/price-data.md) — Quote structure, spread analysis, price history
 - [Simulation](./references/simulation.md) — Trade simulation parameters and interpretation

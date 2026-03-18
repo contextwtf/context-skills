@@ -2,67 +2,69 @@
 
 ## Purpose
 
-Simulation previews what would happen if you placed a trade — the expected fill price, slippage, and fees — without executing anything or modifying any state. It is a read-only operation.
-
-Always simulate before recommending or executing a significant trade. Simulation reveals whether the opportunity you identified (via oracle divergence, price trends, or other analysis) survives real execution costs.
+Simulation previews what would happen if you placed a trade — the expected fill price, slippage, and fees — without executing anything. It is read-only.
 
 ## Parameters
 
-### MCP Tool
-
-```
-context_simulate_trade { marketId: string, side: "yes"|"no", amount: number }
-```
-
-- **marketId** — The market to simulate against.
-- **side** — Whether to simulate buying YES or NO shares.
-- **amount** — The dollar amount to trade, in cents.
-
-### SDK Method
-
-```typescript
+```ts
 interface SimulateTradeParams {
-  side: "yes" | "no"
-  amount: number
+  side: "yes" | "no";           // which outcome to buy
+  amount: number;               // how much to trade
+  amountType?: "usd" | "contracts";  // default: "usd"
+  trader?: string;              // optional: address for self-trade detection
 }
-
-ctx.markets.simulate(marketId: string, params: SimulateTradeParams): Promise<SimulateResult>
 ```
 
-## What Simulation Returns
+### MCP
 
-The result includes:
+```
+context_simulate_trade({ marketId, side: "yes", amount: 10 })
+```
 
-- **Expected fill price** — The average price per share you would pay across all matched orders.
-- **Slippage** — The difference between the current best price and your expected fill price. Larger trades eat through more of the orderbook and incur more slippage.
-- **Fees** — Transaction fees applied to the trade.
-- **Shares received** — The number of shares you would receive for the given amount.
+The MCP tool defaults to USD amount. No `amountType` param — always simulates in USD.
 
-## When to Simulate
+### SDK
 
-- **Before any trade recommendation.** If you are advising on a position, simulate it first to ensure the fill price supports the thesis.
-- **When evaluating oracle arbitrage.** A 10-cent oracle divergence means nothing if slippage eats 8 cents at your desired size.
-- **When sizing positions.** Simulate at multiple amounts to find where slippage becomes unacceptable.
-- **When comparing markets.** Two markets may both show opportunity, but one may have far better execution characteristics.
+```ts
+ctx.markets.simulate(marketId, { side: "yes", amount: 10, amountType: "usd" })
+```
+
+### CLI
+
+```bash
+context markets simulate <marketId> --side yes --amount 10
+```
 
 ## Interpreting Results
 
-**Low slippage (under 2 cents):** The market has sufficient depth at your size. Execution quality is good.
+The simulation returns expected fill price, cost, fees, and slippage.
 
-**Moderate slippage (2-5 cents):** Acceptable for strong conviction trades. Consider reducing size or splitting across multiple orders.
+### Slippage Thresholds
 
-**High slippage (5+ cents):** The market lacks liquidity at this size. Either reduce the amount significantly or reconsider the trade. The opportunity may not survive execution costs.
+| Slippage | Assessment |
+|----------|-----------|
+| < 2% | Good — sufficient liquidity |
+| 2–5% | Acceptable for smaller markets |
+| > 5% | Insufficient liquidity — reduce size or use limit order |
 
-**Comparing fill price to oracle estimate:** If the oracle says YES is worth 72 cents and your simulated fill price is 65, there is a 7-cent edge after slippage. If the fill price is 70, only 2 cents of edge remain — likely not worth the risk.
+### Size Sensitivity
 
-## Size Sensitivity
+Run multiple simulations at different sizes to understand the orderbook depth:
 
-Simulate at multiple amounts to understand the market's liquidity profile:
+1. Simulate at $10, $50, $100, $500
+2. Compare average fill prices at each level
+3. If slippage jumps sharply at a certain size, that's the market's effective depth limit
 
-```
-Simulate $10  -> fill at 58.2, slippage 0.2
-Simulate $50  -> fill at 59.1, slippage 1.1
-Simulate $200 -> fill at 63.4, slippage 5.4
-```
+## Gotchas
 
-This tells you the market can absorb $50 reasonably but $200 would move the price significantly. Use this to calibrate position sizing recommendations.
+- **Simulation ≠ execution.** The orderbook changes between simulate and place. Simulation is a preview, not a reservation.
+- **The `amount` is in USD by default.** If you want to simulate a specific number of contracts, set `amountType: "contracts"`.
+- **MCP tool always uses USD.** There is no `amountType` param on the MCP tool.
+- **Large simulations may show high slippage** even in liquid markets. Split into smaller amounts to find the optimal trade size.
+
+## Note: Two Simulation Methods
+
+The SDK has two different simulate methods:
+
+- `ctx.markets.simulate()` — human-readable params (`side: "yes"|"no"`, `amount`, `amountType`). Use this for research.
+- `ctx.orders.simulate()` — on-chain encoding params (`outcomeIndex`, `maxPrice`, `maxSize`). Use this for order-level precision. See [Orders API](../../trade/references/orders.md).
