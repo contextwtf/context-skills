@@ -20,13 +20,7 @@ Ask the user to share the **wallet address** and **private key**. The private ke
 
 ## Step 3: Set Up the MCP Server
 
-The quickest way to connect the Context Markets MCP server is via the CLI:
-
-```bash
-codex mcp add context-markets -- npx context-markets-mcp
-```
-
-To configure your API key and private key, add them to `~/.codex/config.toml`:
+Add the Context Markets MCP server and credentials to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.context-markets]
