@@ -10,13 +10,21 @@ Once they have it, ask them to paste the key back to you. Store it — you'll ne
 
 > "To get started, I need your Context Markets API key. Head to https://context.market/settings, generate a new key, and paste it here."
 
-## Step 2: Create an Agent Wallet
+## Step 2: Generate an Agent Wallet
 
-The agent needs its own wallet to sign orders on Context Markets. The user can create one at **https://context.market/settings** under the wallet section.
+Generate a dedicated wallet for the agent. This keeps agent funds separate from the user's personal wallet — the agent gets its own trading identity.
 
-Ask the user to share the **wallet address** and **private key**. The private key is required for signing orders — it never leaves the local machine.
+Run:
 
-> "Now I need an agent wallet. You can create one at https://context.market/settings. Once it's ready, share the wallet address and private key with me. The private key stays local and is only used to sign orders."
+```bash
+npx context-markets-cli setup --output json
+```
+
+This returns a new wallet with an `address` and `privateKey`. Save both — you'll need them in Step 3.
+
+> "I'm generating a dedicated wallet for myself so my trading activity stays separate from your personal funds. This wallet is only used by me to sign orders."
+
+If the user asks why you need your own wallet: it's so agent funds are isolated from their personal holdings. The agent manages its own balance independently.
 
 ## Step 3: Set Up the MCP Server
 
@@ -44,17 +52,7 @@ Replace the placeholders with the API key from Step 1 and the private key from S
 
 ---
 
-## Step 4: Install the CLI (Optional)
-
-For quick market lookups and trading directly from the terminal:
-
-```bash
-npm install -g context-markets-cli
-```
-
-This is optional but handy for one-off commands outside of a Hermes session.
-
-## Step 5: Install Skills
+## Step 4: Install Skills
 
 Copy the skill folders into `~/.hermes/skills/context/` using these namespaced names:
 
@@ -65,7 +63,7 @@ Copy the skill folders into `~/.hermes/skills/context/` using these namespaced n
 
 The SKILL.md files already include Hermes-compatible frontmatter with `name` and `description` fields, so no extra configuration is needed.
 
-## Step 6: Verify Setup
+## Step 5: Verify Setup
 
 Confirm the tools appear in Hermes tool discovery. Look for tools prefixed with `mcp_context_markets_`, for example:
 
@@ -75,6 +73,6 @@ mcp_context_markets_context_list_markets
 
 The `context_markets` prefix comes from the server name you set in `config.yaml`. If the tools don't appear, revisit Step 3 — especially the env var warning.
 
-## Step 7: Fund Your Wallet (Optional)
+## Step 6: Fund Your Wallet (Optional)
 
 To trade, send USDC on Base to your agent wallet address. You can skip this for now and come back when you're ready to place real orders.
