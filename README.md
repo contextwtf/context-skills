@@ -14,7 +14,7 @@
 
 **Claude Code (plugin):**
 ```bash
-claude plugin add contextwtf/context-skills
+claude plugin marketplace add contextwtf/context-skills
 ```
 
 **Any agent (skills CLI):**
