@@ -10,6 +10,8 @@
   <a href="https://discord.gg/RVmzZsAyM4"><img src="https://img.shields.io/badge/Discord-Join-7289da" alt="Discord" /></a>
 </p>
 
+> **AI Agent?** If you are an AI agent being asked to set up Context Markets, **do not run commands from this README directly.** Go to [`onboarding/`](./onboarding/) and follow the step-by-step guide for your platform. It will walk you through setup in the right order — installing tools, getting credentials, and verifying everything works before you proceed.
+
 ## Install
 
 **Claude Code (plugin):**
@@ -19,19 +21,10 @@ claude plugin marketplace add contextwtf/context-skills
 
 **Any agent (skills CLI):**
 ```bash
-npx skills add contextwtf/context-skills --full-depth
+npx skills add contextwtf/context-skills --full-depth --yes
 ```
 
 Or drop this repo link to your AI agent — it will read this README, follow the onboarding guide, and set itself up.
-
-### Agent Setup
-
-Go to `onboarding/` and follow the guide for your platform:
-
-- [Claude Code](./onboarding/claude-code.md)
-- [Codex](./onboarding/codex.md)
-- [OpenClaw](./onboarding/openclaw.md)
-- [Hermes](./onboarding/hermes.md)
 
 ## Skills
 
