@@ -36,18 +36,18 @@ const ctx = new ContextClient({
 });
 ```
 
-### SDK vs MCP: The `side` Mismatch
+### SDK vs MCP Order Params
 
-The SDK and MCP use `side` to mean different things. This will cause bugs if confused.
+The SDK, MCP, and CLI all separate outcome selection from trade direction.
 
 **SDK** — `side` is the trade direction, `outcome` is which side of the market:
 ```ts
 ctx.orders.create({ marketId, outcome: "yes", side: "buy", priceCents: 45, size: 10 })
 ```
 
-**MCP** — `side` is the outcome to buy. There is no direction param because the tool always buys:
+**MCP** — `outcome` selects YES/NO, `side` selects buy/sell:
 ```
-context_place_order({ marketId, side: "yes", size: 10, price: 45 })
+context_place_order({ marketId, outcome: "yes", side: "buy", size: 10, price: 45 })
 ```
 
 **CLI** — uses both params explicitly:
@@ -55,7 +55,10 @@ context_place_order({ marketId, side: "yes", size: 10, price: 45 })
 context orders create --market <id> --outcome yes --side buy --price 45 --size 10
 ```
 
-**To sell**, you must use the SDK or CLI. The MCP tool only supports buying.
+- `outcome: "yes" | "no"` — which outcome to trade
+- `side: "buy" | "sell"` — direction (`"buy"` by default in MCP)
+- `price: number` — limit price in cents (1-99); omit for a market order
+- `size: number` — number of contracts
 
 ### Account Setup
 
@@ -65,19 +68,19 @@ context orders create --market <id> --outcome yes --side buy --price 45 --size 1
 
 Must run before first trade. Check status with `ctx.account.status()` or `context_account_setup`.
 
-### MCP Tool Catalog (17 tools)
+### MCP Tool Catalog (25 tools)
 
 **Markets (8 — read-only, no auth):**
 `context_list_markets` · `context_get_market` · `context_get_quotes` · `context_get_orderbook` · `context_simulate_trade` · `context_price_history` · `context_get_oracle` · `context_global_activity`
 
-**Orders (3 — requires API key + private key):**
-`context_place_order` · `context_cancel_order` · `context_my_orders`
+**Orders (7 — requires API key + private key):**
+`context_place_order` · `context_cancel_order` · `context_cancel_replace_order` · `context_my_orders` · `context_bulk_create_orders` · `context_bulk_cancel_orders` · `context_bulk_orders`
 
 **Portfolio (2 — requires API key + private key):**
 `context_get_portfolio` · `context_get_balance`
 
-**Account (2 — requires API key + private key):**
-`context_account_setup` · `context_mint_test_usdc`
+**Account (6 — requires API key + private key):**
+`context_generate_wallet` · `context_wallet_status` · `context_account_setup` · `context_deposit` · `context_withdraw` · `context_mint_test_usdc`
 
 **Questions (2 — requires API key + private key):**
 `context_create_market` · `context_agent_submit_market`

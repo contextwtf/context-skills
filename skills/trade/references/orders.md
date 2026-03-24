@@ -13,7 +13,7 @@ interface PlaceOrderRequest {
   side: "buy" | "sell";
   priceCents: number;           // 1-99
   size: number;                 // min 0.01 contracts
-  expirySeconds?: number;       // 0 = no expiry (default)
+  expirySeconds?: number;       // omitted = 1 year, 0 = expires immediately
   inventoryModeConstraint?: 0 | 1 | 2;  // 0=ANY, 1=REQUIRE_INVENTORY, 2=REQUIRE_NO_INVENTORY
   makerRoleConstraint?: 0 | 1 | 2;      // 0=ANY, 1=MAKER_ONLY ⚠️, 2=TAKER_ONLY
 }
@@ -37,28 +37,41 @@ interface PlaceMarketOrderRequest {
 ### Return Types
 
 ```ts
-type CreateOrderResult = { order: Order; fills: Fill[] };
-type CancelResult = { nonce: string; status: string };
-type CancelReplaceResult = { cancel: CancelResult; create: CreateOrderResult };
-type BulkResult = { results: (CreateOrderResult | CancelResult)[]; errors: unknown[] };
+type CreateOrderResult = { success: true; order: Order };
+type CancelResult = { success: boolean; alreadyCancelled: boolean };
+type CancelReplaceResult = { cancel: { success: true; trader: string; nonce: string; alreadyCancelled: boolean }; create: CreateOrderResult };
+type BulkCreateResult = { results: CreateOrderResult[]; errors: unknown[] };
+type BulkCancelResult = { results: CancelResult[]; errors: unknown[] };
+type BulkResult = { results: (BulkCreateItem | BulkCancelItem)[] };
 ```
 
 ### Order
 
 ```ts
 interface Order {
-  id: string;
   marketId: string;
   trader: string;
   nonce: string;
   side: number;           // 0=buy, 1=sell (on-chain encoding)
-  outcomeIndex: number;   // 0=YES, 1=NO
+  outcomeIndex: number;   // 0=NO, 1=YES
   price: string;          // on-chain encoded
   size: string;           // on-chain encoded
+  filledSize: string;
+  remainingSize: string;
+  percentFilled: number;
   status: OrderStatus;
-  fills: Fill[];
-  createdAt: string;
-  expiresAt?: string;
+  insertedAt: string;
+  type: "limit" | "market";
+  voidedAt: string | null;
+  voidReason:
+    | "UNFILLED_MARKET_ORDER"
+    | "UNDER_COLLATERALIZED"
+    | "MISSING_OPERATOR_APPROVAL"
+    | "BELOW_MIN_FILL_SIZE"
+    | "INVALID_SIGNATURE"
+    | "MARKET_RESOLVED"
+    | "ADMIN_VOID"
+    | null;
 }
 
 type OrderStatus = "open" | "filled" | "cancelled" | "expired" | "voided";
@@ -102,8 +115,8 @@ ctx.orders.cancel(nonce: Hex): Promise<CancelResult>
 ctx.orders.cancelReplace(cancelNonce: Hex, newOrder: PlaceOrderRequest): Promise<CancelReplaceResult>
 
 // Batch operations (see bulk-operations.md)
-ctx.orders.bulkCreate(orders: PlaceOrderRequest[]): Promise<CreateOrderResult[]>
-ctx.orders.bulkCancel(nonces: Hex[]): Promise<CancelResult[]>
+ctx.orders.bulkCreate(orders: PlaceOrderRequest[]): Promise<BulkCreateResult>
+ctx.orders.bulkCancel(nonces: Hex[]): Promise<BulkCancelResult>
 ctx.orders.bulk(creates: PlaceOrderRequest[], cancelNonces: Hex[]): Promise<BulkResult>
 ```
 

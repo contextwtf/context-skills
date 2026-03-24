@@ -18,6 +18,9 @@ The user wants to place or cancel multiple orders at once, build a price ladder,
    - **Create only:** `ctx.orders.bulkCreate(orders)` — places all orders
    - **Cancel only:** `ctx.orders.bulkCancel(nonces)` — cancels by nonce
    - **Mixed (atomic):** `ctx.orders.bulk(creates, cancelNonces)` — cancels execute first, then creates
+   - **MCP create:** `context_bulk_create_orders({ orders })`
+   - **MCP cancel:** `context_bulk_cancel_orders({ nonces })`
+   - **MCP mixed:** `context_bulk_orders({ creates, cancelNonces })`
    - **CLI:** `context orders bulk-create --orders '[...]'` / `context orders bulk-cancel --nonces '[...]'` / `context orders bulk --creates '[...]' --cancels '[...]'`
 3. **Check results** — each order in the batch gets its own result. Inspect the returned array for individual successes and failures.
 4. **Verify** — call `ctx.orders.mine(marketId)` or `context_my_orders` to confirm all expected orders are open.
@@ -28,8 +31,8 @@ The user wants to place or cancel multiple orders at once, build a price ladder,
 - **In `bulk()`, cancels execute before creates.** This is by design — use it for atomic rebalancing so you're never exposed with stale quotes.
 - **One invalid order can fail the entire batch.** Validate all params before submitting. Common failures: price out of range, missing marketId, insufficient balance.
 - **Each order needs a unique nonce.** The SDK generates these automatically. If you build orders manually, ensure unique nonces.
-- **Bulk operations are not available via MCP.** The MCP tool `context_place_order` only handles single orders. For batch operations, use SDK or CLI.
-- **`bulkCreate` returns `CreateOrderResult[]`**, not a single result. Check each element individually.
+- **MCP bulk tools use the same order semantics.** Each create entry still needs `marketId`, `outcome`, `side`, `priceCents`, and `size`.
+- **`bulkCreate` returns `BulkCreateResult`**, not a single result. Inspect both `results` and `errors`.
 
 ## Verification
 

@@ -23,7 +23,7 @@ Discover markets, analyze prices, interpret oracle signals, simulate trades, and
 
 ### Oracle
 
-The AI oracle evaluates markets independently of trading. It analyzes evidence (social media, web sources) and produces a probability estimate. When the oracle estimate diverges from the market price, that's the primary mispricing signal.
+The AI oracle evaluates markets independently of trading. `context_get_oracle` and `ctx.markets.oracle()` return evidence, summary, and confidence context. Numeric oracle quotes come from `ctx.markets.latestOracleQuote(marketId)` or `ctx.markets.oracleQuotes(marketId)`, not from `context_get_oracle`.
 
 - **Divergence < 5 cents** — noise, ignore
 - **Divergence 5–10 cents** — monitor, may be opportunity
@@ -54,6 +54,7 @@ ctx.markets.priceHistory(marketId, params?)
 
 // Oracle
 ctx.markets.oracle(marketId)
+ctx.markets.latestOracleQuote(marketId)
 ctx.markets.oracleQuotes(marketId)
 ctx.markets.requestOracleQuote(marketId)
 
@@ -74,7 +75,7 @@ context markets quotes <id>      Current bid/ask/last
 context markets orderbook <id>   Orderbook depth
 context markets simulate <id>    Preview a trade
 context markets price-history    Historical prices
-context markets oracle <id>      Oracle probability
+context markets oracle <id>      Oracle evidence summary
 context markets oracle-quotes    Oracle quote history
 context markets activity <id>    Market activity feed
 context markets global-activity  Cross-market activity

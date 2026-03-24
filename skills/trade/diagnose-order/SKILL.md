@@ -30,14 +30,13 @@ Read-only diagnosis uses MCP read tools (no auth). Checking your own orders requ
 
 | Void Reason | Cause | Fix |
 |-------------|-------|-----|
-| `insufficient_balance` | Not enough USDC in settlement | `context_get_balance` to check, then deposit more |
-| `self_trade_prevention` | Your buy and sell orders crossed | Cancel one side before placing the other |
-| `market_closed` | Market ended or resolved | Cannot trade this market |
-| `invalid_price` | Price outside 1–99 range | Fix the price parameter |
-| `invalid_signature` | Private key doesn't match account | Verify `CONTEXT_PRIVATE_KEY` is correct |
-| `nonce_already_used` | Duplicate order submission | SDK handles nonces — this usually means a retry collision |
-| `market_not_found` | Bad market ID | Verify with `context_get_market` |
-| `inventory_constraint` | Can't sell without holding tokens | Remove `inventoryModeConstraint` or acquire tokens first |
+| `UNFILLED_MARKET_ORDER` | Market order could not fill immediately | Reduce size, widen the cap price, or use a limit order |
+| `UNDER_COLLATERALIZED` | Not enough USDC or inventory to support the order | Check `context_get_balance`, then deposit or adjust inventory mode |
+| `MISSING_OPERATOR_APPROVAL` | Trading approvals are missing | Run `context_account_setup` |
+| `BELOW_MIN_FILL_SIZE` | Executable remainder is below the minimum fill size | Increase size or use a limit order |
+| `INVALID_SIGNATURE` | Private key doesn't match account | Verify `CONTEXT_PRIVATE_KEY` is correct |
+| `MARKET_RESOLVED` | Market ended or resolved | Cannot trade this market |
+| `ADMIN_VOID` | Order was voided administratively by the system | Inspect account and market state, then retry if appropriate |
 
 ## High Slippage in Simulation
 

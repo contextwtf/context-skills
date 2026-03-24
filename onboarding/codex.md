@@ -11,7 +11,7 @@ Install all three components — CLI, MCP server, and skills.
 npm install -g context-markets-cli
 ```
 
-**MCP Server** (19 tools for markets, trading, portfolio, account, and questions):
+**MCP Server** (25 tools for markets, trading, portfolio, account, and questions):
 ```bash
 codex mcp add context-markets -- npx context-markets-mcp
 ```

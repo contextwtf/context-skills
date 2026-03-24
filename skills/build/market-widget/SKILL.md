@@ -5,11 +5,11 @@ description: Build an embeddable single-market prediction widget with buy/sell b
 
 # Market Widget
 
-Build a self-contained, embeddable component that shows a single market with price, oracle estimate, and one-click trading.
+Build a self-contained, embeddable component that shows a single market with price, oracle context, and one-click trading.
 
 ## When to Use
 
-The user wants to embed a prediction market into an existing page — a compact component showing price, oracle, and a buy button.
+The user wants to embed a prediction market into an existing page — a compact component showing price, oracle context, and a buy button.
 
 ## Steps
 
@@ -30,7 +30,7 @@ The user wants to embed a prediction market into an existing page — a compact 
 
 2. **Market display** — `useMarket(marketId)` for question text, `useQuotes(marketId)` for current prices.
 
-3. **Oracle badge** — `useOracle(marketId)` to show the oracle's probability alongside the market price. Highlight divergence.
+3. **Oracle badge** — use `useOracle(marketId)` for the oracle summary and `useLatestOracleQuote(marketId)` if you want a numeric oracle quote alongside the market price.
 
 4. **Trade preview** — `useSimulateTrade(marketId, params)` to show estimated fill as the user adjusts the amount slider.
 
@@ -49,7 +49,7 @@ The user wants to embed a prediction market into an existing page — a compact 
 ## Verification
 
 - Widget renders market question and current YES/NO prices.
-- Oracle estimate displays alongside market price.
+- Oracle summary or latest oracle quote displays alongside market price.
 - Simulation preview updates as user changes amount.
 - Trade executes and balance updates on success.
 

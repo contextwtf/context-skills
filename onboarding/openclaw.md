@@ -11,7 +11,7 @@ Install all three components — CLI, MCP server, and skills.
 npm install -g context-markets-cli
 ```
 
-**MCP Server** — add to `~/.openclaw/openclaw.json`:
+**MCP Server** (25 tools) — add to `~/.openclaw/openclaw.json`:
 ```json
 {
   "mcpServers": {

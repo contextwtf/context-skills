@@ -11,16 +11,13 @@ Install all three components — CLI, MCP server, and skills.
 npm install -g context-markets-cli
 ```
 
-**MCP Server** — add to your Hermes runtime configuration:
-```json
-{
-  "mcpServers": {
-    "context-markets": {
-      "command": "npx",
-      "args": ["context-markets-mcp"]
-    }
-  }
-}
+**MCP Server** — add to `~/.hermes/config.yaml`:
+```yaml
+mcp_servers:
+  context_markets:
+    command: npx
+    args:
+      - context-markets-mcp
 ```
 
 No env vars needed in the MCP config — credentials are loaded from `~/.config/context/config.env`.
@@ -47,7 +44,7 @@ context setup --output json --save --api-key <USER_API_KEY>
 ```
 This saves the API key to `~/.config/context/config.env` and generates a wallet. The wallet is a harmless side effect — the user doesn't need to fund or use it unless they want to trade.
 
-3. Verify the MCP server is working by calling `context_list_markets`. You should discover 19 tools total across markets, orders, portfolio, account, and questions.
+3. Verify the MCP server is working by calling `context_list_markets`. You should discover 25 tools total across markets, orders, portfolio, account, and questions.
 
 4. **If MCP fails**, troubleshoot:
    - Check that `~/.config/context/config.env` exists and contains `CONTEXT_API_KEY`

@@ -21,7 +21,8 @@ The user wants to build a complete trading frontend with market browsing, order 
    - `useMarket(marketId)` for title, description, status
    - `useQuotes(marketId)` for current prices (consider `refetchInterval: 5000` for live updates)
    - `useOrderbook(marketId)` for bid/ask depth
-   - `useOracle(marketId)` for oracle probability
+   - `useOracle(marketId)` for oracle evidence and summary
+   - `useLatestOracleQuote(marketId)` for the latest numeric oracle quote
 
 4. **Order form** — place trades:
    - `useSimulateTrade(marketId, { side, amount, amountType: "usd" })` for preview as user adjusts size

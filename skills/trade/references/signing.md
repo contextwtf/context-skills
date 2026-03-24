@@ -23,12 +23,12 @@ The SDK resolves this automatically based on the `chain` option in `ContextClien
 ```ts
 {
   Order: [
+    { name: "marketId", type: "bytes32" },
     { name: "trader", type: "address" },
-    { name: "market", type: "bytes32" },
     { name: "price", type: "uint256" },
     { name: "size", type: "uint256" },
+    { name: "outcomeIndex", type: "uint8" },  // 0=NO, 1=YES
     { name: "side", type: "uint8" },          // 0=buy, 1=sell
-    { name: "outcomeIndex", type: "uint8" },  // 0=YES, 1=NO
     { name: "nonce", type: "bytes32" },
     { name: "expiry", type: "uint256" },
     { name: "maxFee", type: "uint256" },
@@ -43,12 +43,12 @@ The SDK resolves this automatically based on the `chain` option in `ContextClien
 ```ts
 {
   MarketOrderIntent: [
+    { name: "marketId", type: "bytes32" },
     { name: "trader", type: "address" },
-    { name: "market", type: "bytes32" },
-    { name: "maxPrice", type: "uint256" },
     { name: "maxSize", type: "uint256" },
-    { name: "side", type: "uint8" },
+    { name: "maxPrice", type: "uint256" },
     { name: "outcomeIndex", type: "uint8" },
+    { name: "side", type: "uint8" },
     { name: "nonce", type: "bytes32" },
     { name: "expiry", type: "uint256" },
     { name: "maxFee", type: "uint256" },
@@ -74,9 +74,15 @@ The SDK exports these for advanced use cases:
 ```ts
 import { encodePriceCents, encodeSize, calculateMaxFee, decodePriceCents, decodeSize } from "context-markets";
 
-encodePriceCents(45)        // 45n * 10_000n = 450_000n
-encodeSize(10)              // 10n * 1_000_000n = 10_000_000n
-calculateMaxFee(45, 10)     // (45 * 10) / 100 = 4 (min 1)
+encodePriceCents(45)        // 450_000n
+encodeSize(10)              // 10_000_000n
+
+// calculateMaxFee expects encoded bigint values, not human-readable numbers.
+// The SDK calls this internally after encoding — you rarely need it directly.
+const price = encodePriceCents(45)   // 450_000n
+const size = encodeSize(10)          // 10_000_000n
+calculateMaxFee(price, size)         // (450_000n * 10_000_000n) / 100n / 1_000_000n = 45_000n
+
 decodePriceCents(450_000n)  // 45
 decodeSize(10_000_000n)     // 10
 ```

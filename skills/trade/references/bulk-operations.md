@@ -12,7 +12,7 @@ const results = await ctx.orders.bulkCreate([
   { marketId, outcome: "yes", side: "buy", priceCents: 35, size: 5 },
   { marketId, outcome: "yes", side: "buy", priceCents: 30, size: 5 },
 ]);
-// Returns: CreateOrderResult[]
+// Returns: BulkCreateResult { results, errors }
 ```
 
 ### bulkCancel — Cancel multiple orders
@@ -23,7 +23,7 @@ const results = await ctx.orders.bulkCancel([
   "0xnonce2...",
   "0xnonce3...",
 ]);
-// Returns: CancelResult[]
+// Returns: BulkCancelResult { results, errors }
 ```
 
 ### bulk — Mixed operations (atomic)
@@ -40,14 +40,14 @@ const result = await ctx.orders.bulk(
   // Cancel nonces (execute first)
   ["0xoldNonce1...", "0xoldNonce2..."],
 );
-// Returns: BulkResult { results, errors }
+// Returns: BulkResult { results }
 ```
 
 ### CLI equivalents
 
 ```bash
 # Bulk create (pass JSON array)
-context orders bulk-create --orders '[{"marketId":"0x...","outcome":"yes","side":"buy","price":40,"size":5}]'
+context orders bulk-create --orders '[{"marketId":"0x...","outcome":"yes","side":"buy","priceCents":40,"size":5}]'
 
 # Bulk cancel
 context orders bulk-cancel --nonces '["0xnonce1...","0xnonce2..."]'
@@ -105,5 +105,8 @@ await ctx.orders.bulk(
 - **One bad order can fail the entire batch.** Validate all params before submitting.
 - **In `bulk()`, cancels execute before creates.** This is the desired behavior for rebalancing — you won't be briefly exposed with no quotes.
 - **Each order needs a unique nonce.** The SDK generates these automatically. If you see `nonce_already_used` errors in bulk, it's likely a retry collision.
-- **Bulk operations are not available via MCP.** Use SDK or CLI only.
-- **`bulkCreate` returns an array**, not a single result. Check each element for success/failure.
+- **MCP supports all three bulk paths.**
+  - `context_bulk_create_orders({ orders })`
+  - `context_bulk_cancel_orders({ nonces })`
+  - `context_bulk_orders({ creates, cancelNonces })`
+- **`bulkCreate` returns `{ results, errors }`**, not a plain array. Check `results` for successes and `errors` for failures.

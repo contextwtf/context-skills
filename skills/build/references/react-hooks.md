@@ -1,14 +1,12 @@
 # React Hooks API Reference
 
-Complete hook signatures for `context-markets-react`. All query hooks return TanStack Query results (`{ data, isLoading, error, refetch, ... }`). All mutation hooks return `{ mutate, mutateAsync, isPending, error, ... }`.
+Complete hook signatures for `context-markets-react`. Query hooks return TanStack Query results such as `{ data, isLoading, error, refetch }`. Mutation hooks return `{ mutate, mutateAsync, isPending, error }`.
 
 ## Market Hooks
 
 ### useMarkets
 
-List and search markets with optional filters.
-
-```typescript
+```ts
 useMarkets(
   params?: SearchMarketsParams,
   options?: UseQueryOptions<MarketList>
@@ -16,43 +14,26 @@ useMarkets(
 ```
 
 **SearchMarketsParams:**
-```typescript
+
+```ts
 {
-  query?: string           // Text search
-  status?: string          // "active" | "pending" | "resolved" | "closed"
-  category?: string        // Market category
-  sortBy?: string          // "new" | "volume" | "trending" | "ending" | "chance"
-  limit?: number           // Results per page
-  offset?: number          // Pagination offset
-}
-```
-
-**Example:**
-```tsx
-function MarketList() {
-  const { data, isLoading } = useMarkets({
-    status: 'active',
-    sortBy: 'trending',
-    limit: 20,
-  })
-
-  if (isLoading) return <p>Loading...</p>
-
-  return (
-    <ul>
-      {data?.markets.map(m => (
-        <li key={m.id}>{m.question} - {m.status}</li>
-      ))}
-    </ul>
-  )
+  query?: string
+  status?: "active" | "pending" | "resolved" | "closed"
+  sortBy?: "new" | "volume" | "trending" | "ending" | "chance"
+  sort?: "asc" | "desc"
+  limit?: number
+  cursor?: string
+  visibility?: "visible" | "hidden" | "all"
+  resolutionStatus?: string
+  creator?: string
+  category?: string
+  createdAfter?: string
 }
 ```
 
 ### useMarket
 
-Fetch a single market by ID.
-
-```typescript
+```ts
 useMarket(
   marketId: string,
   options?: UseQueryOptions<Market>
@@ -60,6 +41,7 @@ useMarket(
 ```
 
 **Example:**
+
 ```tsx
 function MarketDetail({ id }: { id: string }) {
   const { data: market } = useMarket(id)
@@ -69,9 +51,9 @@ function MarketDetail({ id }: { id: string }) {
   return (
     <div>
       <h2>{market.question}</h2>
-      <p>Category: {market.category}</p>
+      <p>Categories: {market.metadata.categories?.join(', ') ?? 'None'}</p>
       <p>Status: {market.status}</p>
-      <p>Volume: {market.volume}</p>
+      <p>Deadline: {market.deadline}</p>
     </div>
   )
 }
@@ -79,9 +61,7 @@ function MarketDetail({ id }: { id: string }) {
 
 ### useOrderbook
 
-Get the orderbook bid/ask ladder for a market.
-
-```typescript
+```ts
 useOrderbook(
   marketId: string,
   params?: GetOrderbookParams,
@@ -90,38 +70,17 @@ useOrderbook(
 ```
 
 **GetOrderbookParams:**
-```typescript
+
+```ts
 {
-  depth?: number           // Number of price levels
-  outcomeIndex?: number    // 0 = YES, 1 = NO
-}
-```
-
-**Example:**
-```tsx
-function Orderbook({ marketId }: { marketId: string }) {
-  const { data } = useOrderbook(marketId, { depth: 10 })
-
-  return (
-    <div>
-      <h4>Bids</h4>
-      {data?.bids.map((level, i) => (
-        <div key={i}>{level.price}c - {level.size} shares</div>
-      ))}
-      <h4>Asks</h4>
-      {data?.asks.map((level, i) => (
-        <div key={i}>{level.price}c - {level.size} shares</div>
-      ))}
-    </div>
-  )
+  depth?: number
+  outcomeIndex?: number    // 0 = NO, 1 = YES
 }
 ```
 
 ### useQuotes
 
-Get current bid, ask, and last trade prices.
-
-```typescript
+```ts
 useQuotes(
   marketId: string,
   options?: UseQueryOptions<Quotes>
@@ -129,36 +88,19 @@ useQuotes(
 ```
 
 **Quotes shape:**
-```typescript
+
+```ts
 {
-  yes: { bid: number; ask: number; last: number }
-  no: { bid: number; ask: number; last: number }
-}
-```
-
-**Example:**
-```tsx
-function PriceDisplay({ marketId }: { marketId: string }) {
-  const { data: quotes } = useQuotes(marketId, {
-    refetchInterval: 5000, // Poll every 5s
-  })
-
-  if (!quotes) return null
-
-  return (
-    <div>
-      <span>YES: {quotes.yes.bid}/{quotes.yes.ask}</span>
-      <span>NO: {quotes.no.bid}/{quotes.no.ask}</span>
-    </div>
-  )
+  yes: { bid: number | null; ask: number | null; last: number | null }
+  no: { bid: number | null; ask: number | null; last: number | null }
+  spread: number | null
+  timestamp: string
 }
 ```
 
 ### usePriceHistory
 
-Fetch historical price data for charting.
-
-```typescript
+```ts
 usePriceHistory(
   marketId: string,
   params?: GetPriceHistoryParams,
@@ -167,27 +109,25 @@ usePriceHistory(
 ```
 
 **GetPriceHistoryParams:**
-```typescript
+
+```ts
 {
   timeframe?: "1h" | "6h" | "1d" | "1w" | "1M" | "all"
 }
 ```
 
 **Example:**
+
 ```tsx
 function PriceChart({ marketId }: { marketId: string }) {
   const { data } = usePriceHistory(marketId, { timeframe: '1w' })
-
-  // data.points is an array of { timestamp, price } for charting
-  return <Chart data={data?.points ?? []} />
+  return <Chart data={data?.prices ?? []} />
 }
 ```
 
 ### useMarketActivity
 
-Get recent activity (trades, orders) for a market.
-
-```typescript
+```ts
 useMarketActivity(
   marketId: string,
   params?: GetActivityParams,
@@ -196,18 +136,20 @@ useMarketActivity(
 ```
 
 **GetActivityParams:**
-```typescript
+
+```ts
 {
+  cursor?: string
   limit?: number
-  offset?: number
+  types?: string
+  startTime?: string
+  endTime?: string
 }
 ```
 
 ### useSimulateTrade
 
-Preview trade execution without placing an order. Returns expected fill price, slippage, and fees.
-
-```typescript
+```ts
 useSimulateTrade(
   marketId: string,
   params: SimulateTradeParams,
@@ -216,32 +158,35 @@ useSimulateTrade(
 ```
 
 **SimulateTradeParams:**
-```typescript
+
+```ts
 {
   side: "yes" | "no"
-  amount: number           // Dollar amount or share count
+  amount: number
+  amountType?: "usd" | "contracts"
+  trader?: string
 }
 ```
 
 **Example:**
+
 ```tsx
 function TradePreview({ marketId }: { marketId: string }) {
   const [amount, setAmount] = useState(10)
-  const { data: sim } = useSimulateTrade(marketId, {
-    side: 'yes',
-    amount,
-  }, {
-    enabled: amount > 0,
-  })
+  const { data: sim } = useSimulateTrade(
+    marketId,
+    { side: 'yes', amount, amountType: 'usd' },
+    { enabled: amount > 0 }
+  )
 
   return (
     <div>
       <input type="number" value={amount} onChange={e => setAmount(+e.target.value)} />
       {sim && (
         <div>
-          <p>Avg price: {sim.avgPrice}c</p>
-          <p>Shares: {sim.shares}</p>
-          <p>Fee: {sim.fee}</p>
+          <p>Avg price: {sim.estimatedAvgPrice}c</p>
+          <p>Contracts: {sim.estimatedContracts}</p>
+          <p>Slippage: {sim.estimatedSlippage}%</p>
         </div>
       )}
     </div>
@@ -251,42 +196,55 @@ function TradePreview({ marketId }: { marketId: string }) {
 
 ### useOracle
 
-Get the AI oracle probability estimate for a market.
+Returns the oracle summary and evidence payload, not a numeric quote.
 
-```typescript
+```ts
 useOracle(
   marketId: string,
-  options?: UseQueryOptions<any>
+  options?: UseQueryOptions<OracleResponse>
 )
 ```
 
 **Example:**
-```tsx
-function OracleView({ marketId }: { marketId: string }) {
-  const { data: oracle } = useOracle(marketId)
-  const { data: quotes } = useQuotes(marketId)
 
-  const divergence = oracle && quotes
-    ? Math.abs(oracle.probability * 100 - quotes.yes.last)
-    : 0
+```tsx
+function OracleSummary({ marketId }: { marketId: string }) {
+  const { data: oracle } = useOracle(marketId)
 
   return (
     <div>
-      <p>Oracle: {oracle?.probability ? `${(oracle.probability * 100).toFixed(0)}%` : '...'}</p>
-      <p>Market: {quotes?.yes.last}c</p>
-      {divergence > 10 && <p>Significant divergence detected</p>}
+      <p>Decision: {oracle?.oracle?.summary.shortSummary ?? 'No oracle summary yet'}</p>
+      <p>Confidence: {oracle?.oracle?.confidenceLevel ?? 'unknown'}</p>
     </div>
   )
 }
 ```
 
+### useLatestOracleQuote
+
+Returns the latest numeric oracle quote.
+
+```ts
+useLatestOracleQuote(
+  marketId: string,
+  options?: UseQueryOptions<OracleQuoteLatest>
+)
+```
+
+**Example:**
+
+```tsx
+function OracleQuoteBadge({ marketId }: { marketId: string }) {
+  const { data: latest } = useLatestOracleQuote(marketId)
+  return <span>{latest?.quote.probability ?? '...'}%</span>
+}
+```
+
 ## Order Hooks
 
-### useOrders (query)
+### useOrders
 
-List orders with optional filters.
-
-```typescript
+```ts
 useOrders(
   params?: GetOrdersParams,
   options?: UseQueryOptions<OrderList>
@@ -294,140 +252,125 @@ useOrders(
 ```
 
 **GetOrdersParams:**
-```typescript
+
+```ts
 {
+  trader?: Address
   marketId?: string
-  status?: string          // "open" | "filled" | "cancelled" | "void"
+  status?: "open" | "filled" | "cancelled" | "expired" | "voided"
+  cursor?: string
   limit?: number
-  offset?: number
 }
 ```
 
-### useOrder (query)
+### useOrder
 
-Fetch a single order by ID.
-
-```typescript
+```ts
 useOrder(
   orderId: string,
   options?: UseQueryOptions<Order>
 )
 ```
 
-### useCreateOrder (mutation)
+### useCreateOrder
 
-Place a limit order. Requires wallet connection and account setup.
-
-```typescript
+```ts
 useCreateOrder(
   options?: UseMutationOptions<CreateOrderResult, Error, PlaceOrderRequest>
 )
 ```
 
 **PlaceOrderRequest:**
-```typescript
+
+```ts
 {
   marketId: string
-  side: 0 | 1              // 0 = buy, 1 = sell
-  outcomeIndex: 0 | 1      // 0 = YES, 1 = NO
-  price: number             // Cents (1-99)
-  size: number              // Shares
+  outcome: "yes" | "no"
+  side: "buy" | "sell"
+  priceCents: number
+  size: number
+  expirySeconds?: number
+  inventoryModeConstraint?: 0 | 1 | 2
+  makerRoleConstraint?: 0 | 1 | 2
 }
 ```
 
 **Example:**
+
 ```tsx
 function LimitOrderForm({ marketId }: { marketId: string }) {
   const { mutate: createOrder, isPending, error } = useCreateOrder({
     onSuccess: (result) => {
-      console.log('Order placed:', result.orderId)
+      console.log('Order placed:', result.order.nonce)
     },
   })
 
-  const handleSubmit = (price: number, size: number) => {
-    createOrder({
-      marketId,
-      side: 0,
-      outcomeIndex: 0,
-      price,
-      size,
-    })
-  }
-
   return (
-    <form onSubmit={e => { e.preventDefault(); handleSubmit(50, 10) }}>
-      <button type="submit" disabled={isPending}>
-        {isPending ? 'Placing...' : 'Buy 10 YES @ 50c'}
-      </button>
-      {error && <p>{error.message}</p>}
-    </form>
+    <button
+      disabled={isPending}
+      onClick={() =>
+        createOrder({
+          marketId,
+          outcome: 'yes',
+          side: 'buy',
+          priceCents: 50,
+          size: 10,
+        })
+      }
+    >
+      Buy 10 YES @ 50c
+      {error ? ` (${error.message})` : ''}
+    </button>
   )
 }
 ```
 
-### useCreateMarketOrder (mutation)
+### useCreateMarketOrder
 
-Place a market order that fills immediately at the best available price.
-
-```typescript
+```ts
 useCreateMarketOrder(
   options?: UseMutationOptions<CreateOrderResult, Error, PlaceMarketOrderRequest>
 )
 ```
 
 **PlaceMarketOrderRequest:**
-```typescript
+
+```ts
 {
   marketId: string
-  side: 0 | 1
-  outcomeIndex: 0 | 1
-  amount: number            // Dollar amount to spend
+  outcome: "yes" | "no"
+  side: "buy" | "sell"
+  maxPriceCents: number
+  maxSize: number
+  expirySeconds?: number
 }
 ```
 
-### useCancelOrder (mutation)
+### useCancelOrder
 
-Cancel an open order by its nonce.
-
-```typescript
+```ts
 useCancelOrder(
   options?: UseMutationOptions<CancelResult, Error, Hex>
 )
 ```
 
-**Example:**
-```tsx
-function CancelButton({ nonce }: { nonce: Hex }) {
-  const { mutate: cancel, isPending } = useCancelOrder()
+### useCancelReplace
 
-  return (
-    <button onClick={() => cancel(nonce)} disabled={isPending}>
-      {isPending ? 'Cancelling...' : 'Cancel'}
-    </button>
-  )
-}
-```
-
-### useCancelReplace (mutation)
-
-Atomically cancel an existing order and place a new one.
-
-```typescript
+```ts
 useCancelReplace(
-  options?: UseMutationOptions<CancelReplaceResult, Error, {
-    cancelNonce: Hex
-    newOrder: PlaceOrderRequest
-  }>
+  options?: UseMutationOptions<
+    CancelReplaceResult,
+    Error,
+    { cancelNonce: Hex; newOrder: PlaceOrderRequest }
+  >
 )
 ```
 
 ## Portfolio Hooks
 
-### usePortfolio (query)
+### usePortfolio
 
-Get positions for a wallet address. Defaults to the connected wallet.
-
-```typescript
+```ts
 usePortfolio(
   address?: Address,
   params?: GetPortfolioParams,
@@ -436,15 +379,16 @@ usePortfolio(
 ```
 
 **Example:**
+
 ```tsx
 function Positions() {
-  const { data } = usePortfolio()
+  const { data } = usePortfolio(undefined, { kind: 'active' })
 
   return (
     <div>
-      {data?.positions.map(pos => (
-        <div key={pos.marketId}>
-          {pos.marketQuestion}: {pos.shares} {pos.outcome} shares
+      {data?.portfolio.map(pos => (
+        <div key={`${pos.marketId}-${pos.outcomeIndex}`}>
+          {pos.marketId}: {pos.balance}
         </div>
       ))}
     </div>
@@ -452,87 +396,87 @@ function Positions() {
 }
 ```
 
-### useBalance (query)
+### useBalance
 
-Get USDC balance for a wallet address.
-
-```typescript
+```ts
 useBalance(
   address?: Address,
   options?: UseQueryOptions<Balance>
 )
 ```
 
-### useClaimable (query)
+### useClaimable
 
-Get claimable winnings from resolved markets.
-
-```typescript
+```ts
 useClaimable(
   address?: Address,
   options?: UseQueryOptions<ClaimableResponse>
 )
 ```
 
-### usePortfolioStats (query)
+### usePortfolioStats
 
-Get profit and loss statistics.
-
-```typescript
+```ts
 usePortfolioStats(
   address?: Address,
   options?: UseQueryOptions<PortfolioStats>
 )
 ```
 
-## Account Hooks
+### usePositions
 
-### useAccountStatus (query)
-
-Check whether the connected wallet has a trading account set up.
-
-```typescript
-useAccountStatus(
-  options?: UseQueryOptions<WalletStatus>
+```ts
+usePositions(
+  address?: Address,
+  params?: GetPositionsParams,
+  options?: UseQueryOptions<PositionList>
 )
 ```
 
-**WalletStatus:**
-```typescript
+## Account Hooks
+
+### useAccountStatus
+
+```ts
+useAccountStatus(
+  options?: UseQueryOptions<AccountStatus>
+)
+```
+
+**AccountStatus:**
+
+```ts
 {
-  ready: boolean
-  hasOperator: boolean
-  hasDeposit: boolean
+  address: Address
+  ethBalance: bigint
+  usdcBalance: bigint
+  usdcAllowance: bigint
+  isOperatorApproved: boolean
+  needsUsdcApproval: boolean
+  needsOperatorApproval: boolean
+  isReady: boolean
 }
 ```
 
-### useAccountSetup (mutation)
+### useAccountSetup
 
-Set up a trading account for the connected wallet. This is a one-time operation.
-
-```typescript
+```ts
 useAccountSetup(
-  options?: UseMutationOptions<GaslessOperatorResult | WalletSetupResult, Error, void>
+  options?: UseMutationOptions<SetupResult, Error, void>
 )
 ```
 
-### useDeposit (mutation)
+### useDeposit
 
-Deposit USDC into the trading account.
-
-```typescript
+```ts
 useDeposit(
-  options?: UseMutationOptions<GaslessDepositResult | Hex, Error, number>
+  options?: UseMutationOptions<DepositResult, Error, number>
 )
 ```
 
-The `number` argument is the USDC amount to deposit.
+### useWithdraw
 
-### useWithdraw (mutation)
-
-Withdraw USDC from the trading account.
-
-```typescript
+```ts
 useWithdraw(
   options?: UseMutationOptions<Hex, Error, number>
 )
@@ -540,31 +484,25 @@ useWithdraw(
 
 ## Question Hooks
 
-### useSubmitQuestion (mutation)
+### useSubmitQuestion
 
-Submit a question for potential market creation.
-
-```typescript
+```ts
 useSubmitQuestion(
   options?: UseMutationOptions<SubmitQuestionResult, Error, string>
 )
 ```
 
-### useSubmitAndWait (mutation)
+### useSubmitAndWait
 
-Submit a question and poll until it is approved or rejected.
-
-```typescript
+```ts
 useSubmitAndWait(
   options?: UseMutationOptions<QuestionSubmission, Error, SubmitAndWaitInput>
 )
 ```
 
-### useCreateMarket (mutation)
+### useCreateMarket
 
-Create a market from an approved question.
-
-```typescript
+```ts
 useCreateMarket(
   options?: UseMutationOptions<CreateMarketResult, Error, string>
 )
@@ -574,28 +512,25 @@ useCreateMarket(
 
 ### contextKeys
 
-Query key factory for TanStack Query cache operations. Use these to invalidate or prefetch specific data.
-
-```typescript
-contextKeys.markets.list(params?)     // Key for useMarkets
-contextKeys.markets.detail(id)        // Key for useMarket
-contextKeys.markets.orderbook(id)     // Key for useOrderbook
-contextKeys.markets.quotes(id)        // Key for useQuotes
-contextKeys.markets.priceHistory(id)  // Key for usePriceHistory
-contextKeys.markets.activity(id)      // Key for useMarketActivity
-contextKeys.markets.oracle(id)        // Key for useOracle
-contextKeys.orders.list(params?)      // Key for useOrders
-contextKeys.orders.detail(id)         // Key for useOrder
-contextKeys.portfolio.positions(addr) // Key for usePortfolio
-contextKeys.portfolio.balance(addr)   // Key for useBalance
-contextKeys.portfolio.stats(addr)     // Key for usePortfolioStats
+```ts
+contextKeys.markets.list(params?)             // useMarkets
+contextKeys.markets.get(id)                   // useMarket
+contextKeys.markets.orderbook(id, params?)    // useOrderbook
+contextKeys.markets.quotes(id)                // useQuotes
+contextKeys.markets.priceHistory(id, params?) // usePriceHistory
+contextKeys.markets.activity(id, params?)     // useMarketActivity
+contextKeys.markets.oracle(id)                // useOracle
+contextKeys.markets.latestOracleQuote(id)     // useLatestOracleQuote
+contextKeys.orders.list(address?, params?)     // useOrders
+contextKeys.orders.get(address?, id?)          // useOrder
+contextKeys.portfolio.get(addr, params?)      // usePortfolio
+contextKeys.portfolio.positions(addr, params?)// usePositions
+contextKeys.portfolio.balance(addr)           // useBalance
+contextKeys.portfolio.stats(addr)             // usePortfolioStats
 ```
 
 ### useContextClient
 
-Access the raw SDK client for advanced use cases not covered by hooks.
-
-```typescript
+```ts
 const client = useContextClient()
-// client is the Context SDK instance
 ```

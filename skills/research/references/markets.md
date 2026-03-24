@@ -14,13 +14,14 @@ interface SearchMarketsParams {
   limit?: number;
   cursor?: string;          // cursor-based pagination, NOT offset
   visibility?: "visible" | "hidden" | "all";
+  resolutionStatus?: string;
   creator?: string;
   createdAfter?: string;
 }
 
 interface GetOrderbookParams {
   depth?: number;
-  outcomeIndex?: number;    // 0=YES, 1=NO. Omit for fullOrderbook.
+  outcomeIndex?: number;    // 0=NO, 1=YES. Omit for fullOrderbook.
 }
 
 interface GetPriceHistoryParams {
@@ -68,7 +69,7 @@ ctx.markets.create(questionId: string): Promise<CreateMarketResult>
 ## Key Return Types
 
 ### Market
-Key fields: `id`, `question`, `shortQuestion`, `status`, `endTime`, `volume`, `category`, `resolutionCriteria`, `evidenceMode`, `sources`.
+Key fields: `id`, `question`, `shortQuestion`, `status`, `deadline`, `volume`, `resolutionStatus`, `resolutionCriteria`, `metadata.categories`, and `metadata.sourceAccounts`.
 
 ### Quotes
 ```ts

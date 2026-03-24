@@ -16,7 +16,7 @@ The user wants to buy or sell YES or NO shares on a specific market.
 1. **Get current prices** — call `context_get_quotes` (MCP) or `ctx.markets.quotes(marketId)` to see bid/ask/last.
 2. **Simulate the trade** — call `context_simulate_trade` (MCP) or `ctx.markets.simulate(marketId, { side, amount, amountType: "usd" })` to preview fill price, cost, and slippage.
 3. **Place the order:**
-   - **MCP:** `context_place_order({ marketId, side: "yes", size: 10, price: 45 })` — omit `price` for a market order
+   - **MCP:** `context_place_order({ marketId, outcome: "yes", side: "buy", size: 10, price: 45 })` — omit `price` for a market order
    - **SDK limit:** `ctx.orders.create({ marketId, outcome: "yes", side: "buy", priceCents: 45, size: 10 })`
    - **SDK market:** `ctx.orders.createMarket({ marketId, outcome: "yes", side: "buy", maxPriceCents: 99, maxSize: 10 })`
    - **CLI:** `context orders create --market <id> --outcome yes --side buy --price 45 --size 10`
@@ -24,7 +24,6 @@ The user wants to buy or sell YES or NO shares on a specific market.
 
 ## Gotchas
 
-- **MCP `side` means outcome**, not direction. `side: "yes"` = buy YES. To sell, use SDK or CLI.
 - **Account must be set up and funded first.** Check with `context_account_setup` or `ctx.account.status()`. If not ready, run setup and deposit before placing orders.
 - **Price must be 1–99 cents.** 0 and 100 are invalid. Price represents the implied probability.
 - **Simulation doesn't guarantee fill price.** The orderbook can change between simulate and place. Simulation is a preview, not a reservation.
@@ -35,7 +34,7 @@ The user wants to buy or sell YES or NO shares on a specific market.
 ## Verification
 
 - Call `context_my_orders` or `ctx.orders.mine(marketId)` — your order should appear with status `"open"`.
-- If placing a market order, check the returned `fills` array — it should show immediate fills.
+- If placing a market order, check the returned `order` object — `status`, `percentFilled`, and `remainingSize` should reflect immediate execution.
 
 ## See Also
 

@@ -19,7 +19,7 @@ open ──→ filled
 | `expired` | The `expirySeconds` timer elapsed without full fill |
 | `voided` | System rejected the order (see void reasons below) |
 
-**Note:** `partially_filled` is NOT a separate status. An order with partial fills remains `open` with a non-zero fill count. Check the `fills` array on the order to see partial fill progress.
+**Note:** `partially_filled` is NOT a separate status. An order with partial fills remains `open`. Track progress with `filledSize`, `remainingSize`, and `percentFilled`.
 
 ## Void Reasons
 
@@ -27,25 +27,24 @@ When an order is voided, the `voidReason` field explains why:
 
 | Reason | Cause | Fix |
 |--------|-------|-----|
-| `insufficient_balance` | Not enough USDC in settlement balance | Deposit more: `ctx.account.deposit(amount)` |
-| `self_trade_prevention` | Your buy and sell orders crossed each other | Cancel one side before placing the other |
-| `market_closed` | Market has ended or been resolved | Cannot trade — check market status first |
-| `invalid_price` | Price outside 1-99 range | Use a valid price in cents |
-| `invalid_signature` | EIP-712 signature doesn't match trader address | Verify CONTEXT_PRIVATE_KEY matches your account |
-| `nonce_already_used` | Duplicate nonce (same order submitted twice) | SDK generates unique nonces automatically — this usually means a retry collision |
-| `market_not_found` | Market ID doesn't exist | Verify the market ID with `context_get_market` |
-| `inventory_constraint` | `inventoryModeConstraint` prevented execution | Usually means trying to sell without holding tokens |
+| `UNFILLED_MARKET_ORDER` | Market order could not fully fill immediately | Raise `maxPriceCents`, reduce `maxSize`, or use a limit order |
+| `UNDER_COLLATERALIZED` | Not enough deposited USDC or inventory to support the order | Deposit more USDC or adjust inventory mode |
+| `MISSING_OPERATOR_APPROVAL` | Trading approvals are missing | Run `ctx.account.setup()` or `context_account_setup` |
+| `BELOW_MIN_FILL_SIZE` | Remaining executable size is below the minimum fill threshold | Increase order size or use a limit order |
+| `INVALID_SIGNATURE` | EIP-712 signature does not match the trader | Verify the signer and private key |
+| `MARKET_RESOLVED` | Market resolved before the order could execute | Cannot trade a resolved market |
+| `ADMIN_VOID` | The order was voided administratively by the system | Inspect market/account state and retry if appropriate |
 
 ## Fill Tracking
 
-- Each fill is recorded with price, size, fee, and timestamp
-- An `open` order can have partial fills — check `fills.length` and sum of fill sizes
-- Once total filled size equals order size, status transitions to `filled`
+- An `open` order can have partial fills — check `filledSize`, `remainingSize`, and `percentFilled`
+- Once `remainingSize` reaches zero, status transitions to `filled`
 - `cancelReplace` on a partially-filled order cancels the remaining unfilled portion
 
 ## Expiry
 
 - Set `expirySeconds` on `PlaceOrderRequest` to auto-expire orders
-- `0` (default) = no expiry — order stays open until filled, cancelled, or voided
+- If omitted, the SDK defaults to `31_536_000` seconds (1 year)
+- `0` expires immediately
 - Timer starts from order creation, not from last fill
 - Expired orders with partial fills keep those fills — only the unfilled remainder expires

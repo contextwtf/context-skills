@@ -4,21 +4,35 @@ Wallet connection and account setup patterns for Context Markets.
 
 ## Wagmi Config
 
-Context Markets operates on Base Sepolia (chain ID 84532). Configure wagmi accordingly:
+Context Markets supports Base mainnet and Base Sepolia. Pair your wagmi chain config with the `ContextProvider` `chain` prop:
+
+- Base mainnet: wagmi `base`, `ContextProvider` default (`chain` omitted)
+- Base Sepolia: wagmi `baseSepolia`, `ContextProvider chain="testnet"`
 
 ```typescript
 import { createConfig, http } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
+import { base, baseSepolia } from 'wagmi/chains'
 import { injected, walletConnect } from 'wagmi/connectors'
 
-export const wagmiConfig = createConfig({
-  chains: [baseSepolia],
+export const mainnetConfig = createConfig({
+  chains: [base],
   connectors: [
-    injected(),                                                 // MetaMask, Coinbase Wallet, etc.
-    walletConnect({ projectId: 'YOUR_WALLETCONNECT_PROJECT_ID' }), // WalletConnect v2
+    injected(),
+    walletConnect({ projectId: 'YOUR_WALLETCONNECT_PROJECT_ID' }),
   ],
   transports: {
-    [baseSepolia.id]: http(),                                   // Default Base Sepolia RPC
+    [base.id]: http(),
+  },
+})
+
+export const testnetConfig = createConfig({
+  chains: [baseSepolia],
+  connectors: [
+    injected(),
+    walletConnect({ projectId: 'YOUR_WALLETCONNECT_PROJECT_ID' }),
+  ],
+  transports: {
+    [baseSepolia.id]: http(),
   },
 })
 ```
@@ -27,7 +41,8 @@ To use a custom RPC endpoint:
 
 ```typescript
 transports: {
-  [baseSepolia.id]: http('https://your-rpc-endpoint.com'),
+  [base.id]: http('https://your-mainnet-rpc.com'),
+  [baseSepolia.id]: http('https://your-testnet-rpc.com'),
 }
 ```
 
@@ -95,7 +110,7 @@ function OnboardingFlow() {
   }
 
   // Step 3: Account not set up
-  if (!status?.ready) {
+  if (!status?.isReady) {
     return (
       <button onClick={() => setup()} disabled={settingUp}>
         {settingUp ? 'Setting up...' : 'Set Up Trading Account'}
@@ -104,7 +119,7 @@ function OnboardingFlow() {
   }
 
   // Step 4: No balance
-  if (balance && balance.amount === 0) {
+  if (balance && balance.usdc.balance === '0') {
     return (
       <button onClick={() => deposit(100)} disabled={depositing}>
         {depositing ? 'Depositing...' : 'Deposit 100 USDC'}
@@ -113,7 +128,7 @@ function OnboardingFlow() {
   }
 
   // Ready to trade
-  return <p>Account ready. Balance: {balance?.amount} USDC</p>
+  return <p>Account ready. Wallet balance: {balance?.usdc.walletBalance} USDC</p>
 }
 ```
 
@@ -149,18 +164,18 @@ Common error scenarios:
 ### Chain Switching
 
 ```tsx
-import { useSwitchChain } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
+import { useAccount, useSwitchChain } from 'wagmi'
+import { base } from 'wagmi/chains'
 
 function ChainGuard({ children }: { children: React.ReactNode }) {
   const { chainId } = useAccount()
   const { switchChain } = useSwitchChain()
 
-  if (chainId !== baseSepolia.id) {
+  if (chainId !== base.id) {
     return (
       <div>
-        <p>Please switch to Base Sepolia</p>
-        <button onClick={() => switchChain({ chainId: baseSepolia.id })}>
+        <p>Please switch to Base</p>
+        <button onClick={() => switchChain({ chainId: base.id })}>
           Switch Network
         </button>
       </div>
@@ -194,21 +209,21 @@ function TradingPanel({ marketId }: { marketId: string }) {
   const { mutate: createOrder, isPending } = useCreateOrder()
 
   if (!isConnected) return <WalletButton />
-  if (!status?.ready) return <OnboardingFlow />
+  if (!status?.isReady) return <OnboardingFlow />
   if (!market || !quotes) return <p>Loading market...</p>
 
   return (
     <div>
       <h2>{market.question}</h2>
       <p>YES: {quotes.yes.bid}/{quotes.yes.ask}</p>
-      <p>Balance: {balance?.amount} USDC</p>
+      <p>Balance: {balance?.usdc.walletBalance} USDC</p>
       <button
         disabled={isPending}
         onClick={() => createOrder({
           marketId,
-          side: 0,
-          outcomeIndex: 0,
-          price: quotes.yes.ask,
+          outcome: 'yes',
+          side: 'buy',
+          priceCents: quotes.yes.ask ?? 50,
           size: 10,
         })}
       >

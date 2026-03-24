@@ -30,7 +30,7 @@ The user wants to find interesting markets to research or trade — by topic, vo
    - **Trending + wide spread** = gaining interest but still illiquid, potential early opportunity
    - **Ending soon + active** = markets approaching resolution, prices should converge to outcome
 
-4. **Cross-reference with oracle** — `context_get_oracle` for markets of interest to see if the oracle agrees with the market price.
+4. **Cross-reference with oracle** — use `context_get_oracle` for the oracle's evidence summary. If you need a numeric oracle quote for comparison, switch to the SDK and call `ctx.markets.latestOracleQuote(marketId)`.
 
 ## Gotchas
 

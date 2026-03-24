@@ -9,9 +9,9 @@ Build prediction market frontends using React hooks from `context-markets-react`
 
 ## Prerequisites
 
-- `context-markets-react` and `context-markets` >= 0.5
+- `context-markets-react` and `context-markets` >= 0.6.0
 - React 18+, `wagmi` >= 2, `viem` >= 2, `@tanstack/react-query` >= 5
-- No API key needed for read-only hooks. Trading hooks require wallet connection.
+- An API key is required for all hooks via the `ContextProvider`. Trading hooks additionally require wallet connection.
 
 ```bash
 npm install context-markets-react context-markets wagmi viem @tanstack/react-query
@@ -67,10 +67,13 @@ Use `contextKeys` for cache invalidation after mutations:
 import { contextKeys } from "context-markets-react"
 
 contextKeys.markets.list(params)
-contextKeys.markets.detail(marketId)
+contextKeys.markets.get(marketId)
 contextKeys.markets.quotes(marketId)
-contextKeys.orders.list(params)
-contextKeys.portfolio.positions(address)
+contextKeys.markets.latestOracleQuote(marketId)
+contextKeys.orders.list(address, params)
+contextKeys.orders.get(address, id)
+contextKeys.portfolio.get(address, params)
+contextKeys.portfolio.positions(address, params)
 contextKeys.portfolio.balance(address)
 ```
 

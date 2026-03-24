@@ -13,12 +13,12 @@ The user wants to provide liquidity by quoting both YES buy and YES sell (or NO 
 
 ## Steps
 
-1. **Determine fair value** — fetch the orderbook with `context_get_orderbook` and the oracle estimate with `context_get_oracle`. The midpoint of the current bid-ask is a starting reference; the oracle provides an independent probability estimate.
+1. **Determine fair value** — fetch the orderbook with `context_get_orderbook`. Use `context_get_oracle` for the oracle's evidence summary, and if you need a numeric oracle quote use `ctx.markets.latestOracleQuote(marketId)` from the SDK. The midpoint of the current bid-ask is a starting reference; the latest oracle quote is a separate pricing input.
 2. **Calculate spread** — set your buy price below fair value and sell price above. Start with a 5–10 cent spread and tighten as you learn the market's volatility.
 3. **Place two-sided quotes:**
    - **SDK (recommended):** Use `ctx.orders.bulkCreate()` with both a buy and sell order, or two separate `ctx.orders.create()` calls.
    - **CLI:** `context orders create --outcome yes --side buy --price <bid> --size 10` and `context orders create --outcome yes --side sell --price <ask> --size 10`
-   - **MCP limitation:** `context_place_order` only buys. For the sell side, you must use SDK or CLI.
+   - **MCP:** you can place both buys and sells with `context_place_order({ marketId, outcome, side, size, price })`
 4. **Monitor fills** — periodically check `ctx.orders.mine(marketId)` or `context_my_orders`. When one side fills, the other is still open.
 5. **Rebalance** — when one side fills, cancel the other and re-quote both sides. Use `ctx.orders.bulk()` for atomic cancel+create to avoid being temporarily unquoted:
    ```ts
@@ -34,8 +34,8 @@ The user wants to provide liquidity by quoting both YES buy and YES sell (or NO 
 - **Inventory risk.** If one side fills repeatedly without the other, you accumulate directional exposure. Track your net position and widen your spread or reduce size if exposure grows.
 - **Spread too tight gets picked off.** Informed traders will trade against you if your spread is tighter than the market's information uncertainty. Start wider (5–10 cents), tighten only after observing fill patterns.
 - **Use `bulk()` for atomic rebalancing.** Cancelling and placing separately creates a window where you have no quotes — other participants can move the price against you.
-- **MCP only supports buying.** Market making requires the sell side, which means you must use SDK or CLI for at least half your quotes.
-- **Monitor the oracle.** If the oracle diverges significantly from your mid-price (>10 cents), re-center your quotes. The oracle reflects independent probability analysis.
+- **Numeric oracle quotes are SDK-only.** MCP exposes `context_get_oracle` for evidence and summary text, not `latestOracleQuote()`.
+- **Monitor the oracle.** If the latest oracle quote diverges significantly from your mid-price (>10 cents), re-center your quotes.
 - **Check `context_get_balance` regularly.** Ensure your settlement balance can cover the new orders. Insufficient balance will cause orders to be voided.
 
 ## Verification

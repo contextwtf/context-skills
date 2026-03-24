@@ -6,8 +6,8 @@ Quotes show the current best bid, best ask, and last trade price for both outcom
 
 ```ts
 interface Quotes {
-  yes: { bid: number; ask: number; last: number };
-  no:  { bid: number; ask: number; last: number };
+  yes: { bid: number | null; ask: number | null; last: number | null };
+  no:  { bid: number | null; ask: number | null; last: number | null };
 }
 ```
 

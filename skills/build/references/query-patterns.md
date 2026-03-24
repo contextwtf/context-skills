@@ -11,19 +11,19 @@ import { contextKeys } from 'context-markets-react'
 
 // Market keys
 contextKeys.markets.list(params?)      // useMarkets query key
-contextKeys.markets.detail(id)         // useMarket query key
+contextKeys.markets.get(id)            // useMarket query key
 contextKeys.markets.orderbook(id)      // useOrderbook query key
 contextKeys.markets.quotes(id)         // useQuotes query key
 contextKeys.markets.priceHistory(id)   // usePriceHistory query key
 contextKeys.markets.activity(id)       // useMarketActivity query key
 contextKeys.markets.oracle(id)         // useOracle query key
 
-// Order keys
-contextKeys.orders.list(params?)       // useOrders query key
-contextKeys.orders.detail(id)          // useOrder query key
+// Order keys (scoped by wallet address)
+contextKeys.orders.list(address?, params?)  // useOrders query key
+contextKeys.orders.get(address?, id?)       // useOrder query key
 
 // Portfolio keys
-contextKeys.portfolio.positions(addr)  // usePortfolio query key
+contextKeys.portfolio.get(addr)        // usePortfolio query key
 contextKeys.portfolio.balance(addr)    // useBalance query key
 contextKeys.portfolio.stats(addr)      // usePortfolioStats query key
 ```
@@ -171,7 +171,7 @@ const queryClient = useQueryClient()
 function MarketListItem({ market }: { market: Market }) {
   const prefetch = () => {
     queryClient.prefetchQuery({
-      queryKey: contextKeys.markets.detail(market.id),
+      queryKey: contextKeys.markets.get(market.id),
       queryFn: () => fetchMarket(market.id),
     })
     queryClient.prefetchQuery({

@@ -16,13 +16,13 @@ The user wants to build a portfolio view that shows their positions, performance
 1. **Positions list** — `usePortfolio()` or `usePositions()` for current holdings:
    ```tsx
    const { data } = usePortfolio(address, { kind: "active" })
-   // data.positions contains market, outcome, size, avgPrice
+   // data.portfolio contains position rows
    ```
 
 2. **Balance breakdown** — `useBalance(address)` for USDC in wallet vs settlement:
    ```tsx
    const { data: balance } = useBalance()
-   // balance.usdc.wallet, balance.usdc.settlement
+   // balance.usdc.walletBalance, balance.usdc.settlementBalance
    ```
 
 3. **P&L stats** — `usePortfolioStats(address)` for aggregate performance metrics.
@@ -44,7 +44,7 @@ The user wants to build a portfolio view that shows their positions, performance
 
 - **Positions may show stale prices.** The position's entry price is fixed, but current market price changes. Use `useQuotes` with `refetchInterval` for live P&L.
 - **Balance has two parts.** Wallet USDC and settlement USDC. Users trade with settlement balance. Show both clearly.
-- **Claimable positions don't auto-claim.** Show a "Claim" button that calls the claim function. If you don't surface this, users will miss winnings.
+- **Claimable data is read-only here.** `useClaimable()` tells you what can be claimed, but there is no React hook in this package that submits claims.
 - **Address is optional** — if omitted, hooks use the connected wallet address from wagmi. Pass explicitly if showing another user's portfolio.
 - **`usePositions` vs `usePortfolio`** — `usePositions` returns a flat position list, `usePortfolio` returns the full portfolio summary. Choose based on your UI needs.
 
@@ -53,7 +53,7 @@ The user wants to build a portfolio view that shows their positions, performance
 - Positions list shows all active positions with market name and side.
 - Balance shows both wallet and settlement USDC.
 - P&L calculation: current price minus entry price, multiplied by size.
-- Claimable section shows resolved markets with a claim action.
+- Claimable section shows resolved markets with claimable amounts (display-only — no claim mutation hook is exported).
 
 ## See Also
 
