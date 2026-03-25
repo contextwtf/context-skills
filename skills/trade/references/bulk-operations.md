@@ -12,7 +12,7 @@ const results = await ctx.orders.bulkCreate([
   { marketId, outcome: "yes", side: "buy", priceCents: 35, size: 5 },
   { marketId, outcome: "yes", side: "buy", priceCents: 30, size: 5 },
 ]);
-// Returns: BulkCreateResult { results, errors }
+// Returns: { success: true, results: BulkCreateItem[] }
 ```
 
 ### bulkCancel — Cancel multiple orders
@@ -23,7 +23,7 @@ const results = await ctx.orders.bulkCancel([
   "0xnonce2...",
   "0xnonce3...",
 ]);
-// Returns: BulkCancelResult { results, errors }
+// Returns: { success: true, results: BulkCancelItem[] }
 ```
 
 ### bulk — Mixed operations (atomic)
@@ -40,7 +40,7 @@ const result = await ctx.orders.bulk(
   // Cancel nonces (execute first)
   ["0xoldNonce1...", "0xoldNonce2..."],
 );
-// Returns: BulkResult { results }
+// Returns: { success: true, results: (BulkCancelItem | BulkCreateItem)[] }
 ```
 
 ### CLI equivalents
@@ -109,4 +109,4 @@ await ctx.orders.bulk(
   - `context_bulk_create_orders({ orders })`
   - `context_bulk_cancel_orders({ nonces })`
   - `context_bulk_orders({ creates, cancelNonces })`
-- **`bulkCreate` returns `{ results, errors }`**, not a plain array. Check `results` for successes and `errors` for failures.
+- **Bulk methods return an object**, not a plain array. Check `success` and inspect `results` for the per-operation items.

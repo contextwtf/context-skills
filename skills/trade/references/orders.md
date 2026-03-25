@@ -40,9 +40,11 @@ interface PlaceMarketOrderRequest {
 type CreateOrderResult = { success: true; order: Order };
 type CancelResult = { success: boolean; alreadyCancelled: boolean };
 type CancelReplaceResult = { cancel: { success: true; trader: string; nonce: string; alreadyCancelled: boolean }; create: CreateOrderResult };
-type BulkCreateResult = { results: CreateOrderResult[]; errors: unknown[] };
-type BulkCancelResult = { results: CancelResult[]; errors: unknown[] };
-type BulkResult = { results: (BulkCreateItem | BulkCancelItem)[] };
+type BulkCreateItem = { type: "create"; success: true; order: Order };
+type BulkCancelItem = { type: "cancel"; success: true; trader: string; nonce: string; alreadyCancelled: boolean };
+type BulkCreateResult = { success: true; results: BulkCreateItem[] };
+type BulkCancelResult = { success: true; results: BulkCancelItem[] };
+type BulkResult = { success: true; results: (BulkCreateItem | BulkCancelItem)[] };
 ```
 
 ### Order
